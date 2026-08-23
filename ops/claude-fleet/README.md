@@ -7,8 +7,11 @@ auto-restarting `systemd` service across your VPS fleet.
 
 - Installs Node.js 20 (only if not already 18+)
 - Installs the Claude Code CLI (`@anthropic-ai/claude-code`)
-- Runs it as a `systemd` service (`claude-code.service`) — auto-restarts on
-  crash **and on reboot**, unlike a bare `tmux` session
+- Runs it inside a `tmux` session (`claude-code`), since `claude` is an
+  interactive TUI and needs a real pty — a bare `systemd` process can't give
+  it one. A `systemd` unit (`claude-code.service`, `Type=oneshot` +
+  `RemainAfterExit=yes`) recreates that tmux session on every boot, and a
+  `while true` loop inside the session restarts `claude` if it ever crashes.
 - Authenticates via `ANTHROPIC_API_KEY` (usage-based billing) — no manual
   OAuth click needed per server
 - Confirms SSH key login works, then disables SSH password auth
@@ -43,8 +46,8 @@ actually out of date.
 
 ```bash
 ssh vps1   # if you set up ~/.ssh/config aliases, otherwise: ssh root@<ip>
-systemctl status claude-code    # confirm it's running
-journalctl -u claude-code -f    # tail its logs live
+systemctl status claude-code    # confirm the tmux session was (re)created
+tmux attach -t claude-code      # watch/interact with it live (Ctrl+B, D to detach)
 ```
 
 ## Notes / decisions worth revisiting

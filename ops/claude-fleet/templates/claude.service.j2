@@ -1,22 +1,23 @@
 [Unit]
-Description=Claude Code (persistent maintenance agent)
+Description=Claude Code (persistent maintenance agent, run inside tmux for a real pty)
 After=network-online.target
 Wants=network-online.target
 
 [Service]
-Type=simple
+# claude is an interactive TUI — it needs a real pty, which Type=simple can't
+# provide directly. tmux gives it one; this unit's job is just to (re)create
+# that tmux session on boot. The inner `while true` loop restarts claude if
+# it ever exits/crashes, since systemd itself only supervises the one-shot
+# launch, not what happens inside the tmux session afterward.
+Type=oneshot
+RemainAfterExit=yes
 User=root
 Environment="ANTHROPIC_API_KEY={{ anthropic_api_key }}"
 Environment="HOME=/root"
 WorkingDirectory=/root
-# --dangerously-skip-permissions is NOT used here; default permission mode applies.
-# Change --permission-mode if you want a different default (see: claude --help).
-ExecStart=/usr/bin/claude --permission-mode=auto
-Restart=on-failure
-RestartSec=10
-StandardOutput=journal
-StandardError=journal
-SyslogIdentifier=claude-code
+ExecStartPre=-/usr/bin/tmux kill-session -t claude-code
+ExecStart=/usr/bin/tmux new-session -d -s claude-code "while true; do /usr/bin/claude --permission-mode=auto; sleep 5; done"
+ExecStop=/usr/bin/tmux kill-session -t claude-code
 
 [Install]
 WantedBy=multi-user.target

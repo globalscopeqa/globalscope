@@ -18,6 +18,7 @@
           - curl
           - ufw
           - fail2ban
+          - tmux
         state: present
         update_cache: true
 
