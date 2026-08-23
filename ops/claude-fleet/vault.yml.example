@@ -1,0 +1,9 @@
+# Copy this to vault.yml, fill in your real key, then encrypt it:
+#   cp vault.yml.example vault.yml
+#   (edit vault.yml with your real ANTHROPIC_API_KEY)
+#   ansible-vault encrypt vault.yml
+#
+# From then on, run the playbook with --ask-vault-pass so the key
+# is never stored in plaintext on disk or in git.
+
+anthropic_api_key: "sk-ant-REPLACE-WITH-YOUR-REAL-KEY"

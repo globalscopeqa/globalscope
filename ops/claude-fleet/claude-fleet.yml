@@ -1,0 +1,111 @@
+---
+# Idempotent fleet provisioning for Claude Code across all VPS in [claude_fleet].
+# Usage: ansible-playbook -i inventory.ini claude-fleet.yml --ask-vault-pass
+#
+# The Anthropic API key is expected in an Ansible Vault–encrypted var file
+# (see vault.yml.example) — never commit it in plaintext.
+
+- name: Provision Claude Code on VPS fleet
+  hosts: claude_fleet
+  become: true
+  vars_files:
+    - vault.yml
+
+  tasks:
+    - name: Ensure required apt packages are present
+      apt:
+        name:
+          - curl
+          - ufw
+          - fail2ban
+        state: present
+        update_cache: true
+
+    - name: Check current Node.js version
+      command: node -v
+      register: node_version
+      changed_when: false
+      failed_when: false
+
+    - name: Download NodeSource setup script (Node 20)
+      get_url:
+        url: https://deb.nodesource.com/setup_20.x
+        dest: /tmp/setup-node.sh
+        mode: "0755"
+      when: node_version.rc != 0 or not node_version.stdout is search('v(1[89]|[2-9][0-9])')
+
+    - name: Run NodeSource setup script
+      command: bash /tmp/setup-node.sh
+      when: node_version.rc != 0 or not node_version.stdout is search('v(1[89]|[2-9][0-9])')
+
+    - name: Install Node.js
+      apt:
+        name: nodejs
+        state: present
+        update_cache: true
+      when: node_version.rc != 0 or not node_version.stdout is search('v(1[89]|[2-9][0-9])')
+
+    - name: Install Claude Code CLI globally
+      npm:
+        name: "@anthropic-ai/claude-code"
+        global: true
+        state: present
+
+    - name: Deploy systemd unit for Claude Code
+      template:
+        src: templates/claude.service.j2
+        dest: /etc/systemd/system/claude-code.service
+        owner: root
+        group: root
+        mode: "0600"   # contains the API key — keep it root-readable only
+      notify: restart claude-code
+
+    - name: Enable and start Claude Code service
+      systemd:
+        name: claude-code
+        enabled: true
+        state: started
+        daemon_reload: true
+
+    # --- SSH / firewall hardening (safe to re-run; only tightens if a key login already works) ---
+
+    - name: Confirm key-based SSH login works before disabling passwords
+      local_action: command ssh -i {{ ansible_ssh_private_key_file }} -o BatchMode=yes -o ConnectTimeout=5 {{ ansible_user }}@{{ ansible_host }} true
+      register: key_login_check
+      failed_when: false
+      changed_when: false
+
+    - name: Disable SSH password authentication (only once key login is confirmed)
+      lineinfile:
+        path: /etc/ssh/sshd_config
+        regexp: '^#?PasswordAuthentication'
+        line: 'PasswordAuthentication no'
+      when: key_login_check.rc == 0
+      notify: restart sshd
+
+    - name: Enable UFW and allow SSH only
+      ufw:
+        rule: allow
+        name: OpenSSH
+    - name: Turn UFW on
+      ufw:
+        state: enabled
+        policy: deny
+
+    - name: Ensure fail2ban is running
+      systemd:
+        name: fail2ban
+        enabled: true
+        state: started
+
+  handlers:
+    - name: restart claude-code
+      systemd:
+        name: claude-code
+        state: restarted
+        daemon_reload: true
+
+    - name: restart sshd
+      systemd:
+        name: sshd
+        state: restarted

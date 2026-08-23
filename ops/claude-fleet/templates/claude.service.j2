@@ -1,0 +1,22 @@
+[Unit]
+Description=Claude Code (persistent maintenance agent)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=root
+Environment="ANTHROPIC_API_KEY={{ anthropic_api_key }}"
+Environment="HOME=/root"
+WorkingDirectory=/root
+# --dangerously-skip-permissions is NOT used here; default permission mode applies.
+# Change --permission-mode if you want a different default (see: claude --help).
+ExecStart=/usr/bin/claude --permission-mode=auto
+Restart=on-failure
+RestartSec=10
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=claude-code
+
+[Install]
+WantedBy=multi-user.target
