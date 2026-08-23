@@ -28,10 +28,10 @@
       failed_when: false
 
     - name: Download NodeSource setup script (Node 20)
-      get_url:
-        url: https://deb.nodesource.com/setup_20.x
-        dest: /tmp/setup-node.sh
-        mode: "0755"
+      # Uses curl via shell instead of the get_url module: get_url hits a known
+      # ansible-core bug ("CustomHTTPSConnection has no attribute cert_file")
+      # on targets running Python 3.12+.
+      command: curl -fsSL -o /tmp/setup-node.sh https://deb.nodesource.com/setup_20.x
       when: node_version.rc != 0 or not node_version.stdout is search('v(1[89]|[2-9][0-9])')
 
     - name: Run NodeSource setup script
