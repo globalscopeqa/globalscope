@@ -1,0 +1,38 @@
+INSTAGRAM / TIKTOK / FACEBOOK
+-----------------------------
+How does the internet actually reach your desk? 🌐➡️💻
+
+Every web page you open takes a 6-step journey in milliseconds:
+1️⃣ ISP fibre: light pulses arrive at the demarc, where your network begins
+2️⃣ Router + firewall: every packet inspected, threats blocked
+3️⃣ Core switch: the backbone, moving data at 10 Gb/s+
+4️⃣ Access switches + PoE: data and power to phones, cameras and APs
+5️⃣ Wi-Fi: secure WPA3 connection
+6️⃣ Your laptop ✅
+
+Every hop is designed, secured and managed. That's what we build at Global Scope. 🇶🇦
+
+📩 Planning a new office network or upgrade? DM us or visit globalscope.qa
+
+#NetworkInfrastructure #Cybersecurity #ITSolutions #Qatar #Doha #DohaBusiness #ManagedIT #WiFi #Firewall #SystemsIntegration #TechExplained #Networking #GlobalScope
+
+LINKEDIN
+--------
+Your team clicks a link. The page loads in 12 ms. Behind that click sits a six-stage journey most people never see:
+
+→ ISP fibre lands at the demarcation point, where the provider's network ends and yours begins
+→ The edge router and firewall inspect every packet and stop threats before they reach a user
+→ The core switch moves traffic between floors and servers at 10 Gb/s and up
+→ Access switches carry data, and PoE power, to phones, cameras and access points
+→ Wi-Fi 6E with WPA3-Enterprise connects devices securely
+→ The laptop
+
+When one link in that chain is weak, everyone feels it. At Global Scope we've been designing, securing and managing networks like this across Qatar since 2009.
+
+Planning an office move, a network refresh or a security review? Let's talk: globalscope.qa
+
+#NetworkInfrastructure #Cybersecurity #ManagedServices #Qatar #ITSolutions
+
+YOUTUBE SHORTS TITLE
+--------------------
+How Does the Internet Reach Your Desk? (ISP → Laptop in 60s) #shorts
