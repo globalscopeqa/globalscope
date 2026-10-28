@@ -1,0 +1,40 @@
+INSTAGRAM / TIKTOK / FACEBOOK
+-----------------------------
+How does a CDU cool a high-density AI data centre? ❄️🖥️
+
+As GPU racks push past what air can handle, liquid takes over, and the Coolant Distribution Unit (CDU) sits at the heart of it:
+1️⃣ Cold plates pull heat straight off the GPUs and CPUs
+2️⃣ The TCS (technology cooling system) loop carries that heat back to the CDU
+3️⃣ A plate heat exchanger transfers it to the facility water system (FWS), and the two loops never mix
+4️⃣ N+1 pumps with VFDs adjust flow to hold the supply temperature steady
+5️⃣ Side-stream filtration keeps the coolant clean
+6️⃣ The facility rejects the heat outside, via dry coolers or cooling towers
+
+CDU capacity alone doesn't define the design. The whole loop has to be engineered. 🔧
+
+💬 Planning for AI or high-density racks? DM us or visit globalscope.qa
+
+#DataCentre #DataCenter #LiquidCooling #CDU #AIInfrastructure #GPU #HighDensity #DirectToChip #Qatar #Doha #ITInfrastructure #TechExplained #GlobalScope
+
+LINKEDIN
+--------
+Air cooling has limits. AI racks are blowing past them.
+
+Direct-to-chip liquid cooling depends on one critical piece of equipment: the Coolant Distribution Unit (CDU).
+
+→ Cold plates capture heat directly at the processors
+→ The technology cooling system (TCS) loop returns warm coolant to the CDU
+→ A plate heat exchanger moves that heat into the facility water system (FWS), keeping the two loops fully separated
+→ N+1 pumps and variable-speed drives hold supply temperature and flow steady as GPU load swings
+→ Filtration, pressure control and monitoring protect the cold plates
+→ The facility rejects the heat outside
+
+Choosing a CDU by megawatts is only the start. Approach temperature, redundancy, water chemistry and controls all decide whether the system holds up under real AI load.
+
+At Global Scope we help organisations across Qatar plan and integrate infrastructure that is ready for high-density compute. Planning an AI or HPC deployment? Let's talk: globalscope.qa
+
+#LiquidCooling #DataCentre #AIInfrastructure #HPC #Qatar
+
+YOUTUBE SHORTS TITLE
+--------------------
+How Does a CDU Cool an AI Data Centre? (Liquid Cooling in 60s) #shorts
