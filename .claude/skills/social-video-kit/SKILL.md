@@ -18,6 +18,21 @@ House rules for every video request from this user. Follow them without asking a
 
 **Every video gets its 1:1 cover as a 1-second intro** (step 5): always make the cover first, then add it. A "cover" always means the Instagram cover: make the 1:1 one. When they ask for a "thumbnail" or "YT Short", make the 9:16 one. When they ask for both, make both. Never switch sizes unless the user asks for a different size in that request.
 
+## Inbox workflow: process videos one by one
+
+The user keeps new videos in `C:\Users\Dell\OneDrive\Documents\Projects\Media\Inbox` on their Windows PC. Claude can't reach that PC, so `sync-media.ps1` (repo root, run by the user) pushes those videos to `inbox/` on branch `ccr-bae6bdbf-qv17eb`. It also pulls everything in `media/`, including the tracker, back into their `Media` folder.
+
+When the user says "process the inbox" (or similar), or uploads videos in chat:
+1. `git fetch origin ccr-bae6bdbf-qv17eb` and work on that branch, so new inbox files are present.
+2. List `inbox/*.mp4|mov|m4v`, oldest first. Process **one video at a time, fully**, before starting the next: steps 1–6 below, then deliver its files.
+3. Title and caption source: a same-name `.txt` next to the video, if present, holds the title on its first line and the user's post description after it; otherwise use the file name. Slug: a short kebab-case form of the topic (e.g. `cdu-cooling`).
+4. Finish each video: copy its deliverables to `media/<slug>/`, `git rm` the video (and its `.txt`) from `inbox/` (the user keeps the original on their PC in `Inbox\Uploaded`), add an entry to `media/videos.json` (slug, title, source file name, received, completed, video, intro: true, notes), run `python3 .claude/skills/social-video-kit/scripts/tracker.py` to rebuild `media/video-tracker.xlsx`, then commit and push. Only then start the next video.
+5. After the last one, tell the user to run `sync-media.ps1` to download everything, and summarise each video in one line.
+
+## Video tracker (Excel)
+
+`media/video-tracker.xlsx` is rebuilt by `scripts/tracker.py` from `media/videos.json` and the files in each `media/<slug>/` folder. The Yes/No columns reflect which files exist, Status is a formula (Done when all five deliverables exist), and videos waiting in `inbox/` show as "In inbox". Never hand-edit the xlsx: change `videos.json` or the files, then re-run the script. Rebuild it whenever any video's files change.
+
 ## Where things go
 
 - Work in the session scratchpad: one folder per video.
