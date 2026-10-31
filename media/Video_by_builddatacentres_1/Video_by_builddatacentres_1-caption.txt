@@ -1,0 +1,49 @@
+INSTAGRAM / TIKTOK / FACEBOOK
+-----------------------------
+How do you design the electrical infrastructure for a 200 MW AI data centre? ⚡
+
+At this scale it's not just picking transformers. It's a utility-scale power system, from the grid connection all the way to the GPU rack:
+1️⃣ Grid interconnection and an HV receiving substation
+2️⃣ Independent A/B power paths
+3️⃣ HV/MV transformers with fault-current control
+4️⃣ Sectionalised MV distribution, so a fault stays small
+5️⃣ UPS and critical power to bridge any outage
+6️⃣ MV generators with black-start and staged load restoration
+7️⃣ SCADA/EPMS monitoring, plus room to grow without touching live loads
+
+The golden rule: never let 200 MW behave like one electrical fault domain. 🛡️
+
+Utility lost? UPS bridges → generators start → synchronise → cooling stabilises → load blocks restore. ⚡
+
+GRID → HV SUBSTATION → TRANSFORMER → MV → UPS → BUSWAY → GPU
+
+🏗️ Planning critical power for a data centre or server room? DM us or visit globalscope.qa
+
+#DataCentre #DataCenterDesign #AIInfrastructure #CriticalPower #PowerDistribution #Substation #UPS #Hyperscale #ElectricalEngineering #MissionCritical #Qatar #Doha #GlobalScope
+
+LINKEDIN
+--------
+How do you design the electrical infrastructure for a 200 MW AI data centre?
+
+At this scale, substation design stops being about choosing transformers. It becomes a utility-scale power-system challenge, from the grid connection all the way to the GPU rack.
+
+→ Utility interconnection and HV receiving substation
+→ Independent A/B power paths
+→ HV/MV transformer strategy with impedance and fault-current control
+→ Sectionalised MV distribution and controlled fault domains
+→ Load-flow, short-circuit and protection-coordination studies
+→ UPS and critical-power architecture
+→ MV generator integration, black-start and staged load restoration
+→ Grounding, arc-flash and power-quality engineering
+→ SCADA / EPMS monitoring
+→ Expansion without disrupting live IT loads
+
+The principle that matters most: never allow 200 MW to behave like one electrical fault domain. A breaker failure, transformer outage or maintenance event should affect the smallest practical part of the campus while healthy capacity keeps running.
+
+At Global Scope we've been helping organisations across Qatar plan, integrate and manage resilient IT infrastructure since 2009. Planning a data centre or critical-power upgrade? Let's talk: globalscope.qa
+
+#DataCentre #AIInfrastructure #CriticalPower #PowerSystems #Qatar
+
+YOUTUBE SHORTS TITLE
+--------------------
+How Do You Power a 200 MW AI Data Centre? (Grid to GPU in 60s) #shorts
