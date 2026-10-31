@@ -69,14 +69,19 @@ async function thumb(cfg) {
   x.beginPath(); x.roundRect(60, 128, tw + 60, 64, 32); x.fillStyle = cfg.tagBg; x.fill();
   t(cfg.tag, 90, 161, 30, cfg.tagFg, 700, 'JetBrains Mono', 'left', 4);
   let y = cfg.y ?? 1060;
-  cfg.lines.forEach(L => {
-    let size = L.size; x.font = `900 ${size}px "Inter"`; x.letterSpacing = '-3px'; const m = x.measureText(L.s).width; if (m > W - 110) size = Math.floor(size * (W - 110) / m);
-    x.font = `900 ${size}px "Inter"`; x.textAlign = 'center'; x.textBaseline = 'middle';
+  // fit every line to the width first, so line spacing can use the real sizes of both neighbours
+  const sizes = cfg.lines.map(L => {
+    x.font = `900 ${L.size}px "Inter"`; x.letterSpacing = '-3px'; const m = x.measureText(L.s).width; x.letterSpacing = '0px';
+    return m > W - 110 ? Math.floor(L.size * (W - 110) / m) : L.size;
+  });
+  cfg.lines.forEach((L, i) => {
+    const size = sizes[i];
+    if (i > 0) y += (sizes[i - 1] + size) / 2 * 0.9;
+    x.font = `900 ${size}px "Inter"`; x.letterSpacing = '-3px'; x.textAlign = 'center'; x.textBaseline = 'middle';
     x.lineJoin = 'round'; x.lineWidth = size * 0.16; x.strokeStyle = 'rgba(0,0,0,0.85)'; x.strokeText(L.s, W / 2, y);
     if (L.glow) { x.shadowColor = L.glow; x.shadowBlur = 50; } x.fillStyle = L.col; x.fillText(L.s, W / 2, y); x.shadowBlur = 0; x.letterSpacing = '0px';
-    y += size * 0.98;
   });
-  y += 30; x.font = '700 46px "Inter"'; const sbw = x.measureText(cfg.sub).width + 70;
+  y += sizes[sizes.length - 1] * 0.98 + 30; x.font = '700 46px "Inter"'; const sbw = x.measureText(cfg.sub).width + 70;
   x.beginPath(); x.roundRect(W / 2 - sbw / 2, y - 42, sbw, 84, 42); x.fillStyle = cfg.subBg; x.fill();
   t(cfg.sub, W / 2, y + 2, 46, cfg.subFg, 700, 'Inter', 'center');
   t(cfg.footer || '60-SECOND EXPLAINER', W / 2, H - 150, 30, 'rgba(255,255,255,0.75)', 700, 'JetBrains Mono', 'center', 5);

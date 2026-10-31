@@ -1,0 +1,55 @@
+INSTAGRAM / TIKTOK / FACEBOOK
+-----------------------------
+What does it actually take to build a data centre? 🏗️➡️🖥️
+
+It's much more than installing server racks. Watch an empty shell become fully operational, layer by layer:
+1️⃣ High-density racks go in
+2️⃣ Power: rack PDUs, overhead busbar, cable trays and power cabling ⚡
+3️⃣ Cooling: chilled-water supply and return piping, CRAH units, chillers and pumps ❄️
+4️⃣ Mechanical: valves, headers and connections
+5️⃣ Fire protection, plumbing and drainage 🔥💧
+6️⃣ BMS and instrumentation to monitor it all 📊
+7️⃣ Final system startup ✅
+
+No narration, just the engineering sequence and the real mechanical soundscape. 🔊
+
+Mechanical, electrical, plumbing, fire protection and IT all have to work as one system.
+
+👇 Which system should we break down next?
+🏢 Planning a server room or data centre project? DM us or visit globalscope.qa
+
+#DataCentre #DataCenter #DataCentreInfrastructure #DataCentreDesign #MEP #CriticalInfrastructure #Cooling #PowerDistribution #ITInfrastructure #Engineering #Qatar #Doha #GlobalScope
+
+LINKEDIN
+--------
+Building a Data Centre: From Empty Shell to Fully Operational Infrastructure
+
+What does it actually take to build a modern data centre? It's much more than installing server racks.
+
+This video shows the build layer by layer:
+→ High-density data racks
+→ Server and rack power distribution
+→ Overhead busbar systems
+→ Cable trays and power cabling
+→ Chilled-water supply and return piping
+→ CRAH cooling units
+→ Chillers and chilled-water pumps
+→ Valves, headers and mechanical connections
+→ Fire-protection piping
+→ Plumbing and drainage infrastructure
+→ BMS and instrumentation
+→ Final system startup
+
+The goal is to show how mechanical, electrical, plumbing, fire protection and IT infrastructure have to work together to support a modern data centre.
+
+There's no narration. The story is told through the engineering sequence itself: assembly, connection, commissioning and the real mechanical soundscape of the equipment.
+
+At Global Scope we've been helping organisations across Qatar plan, integrate and manage IT infrastructure since 2009. Planning a server room or data centre project? Let's talk: globalscope.qa
+
+Which system should we break down next?
+
+#DataCentre #DataCentreInfrastructure #MEP #CriticalInfrastructure #DataCentreDesign
+
+YOUTUBE SHORTS TITLE
+--------------------
+How Is a Data Centre Built? (Empty Shell to Live in 40s) #shorts
