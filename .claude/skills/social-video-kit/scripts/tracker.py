@@ -6,6 +6,7 @@ Deliverable columns are Yes/No from what actually exists on disk; Status is an E
 Videos still waiting in inbox/ are listed as "In inbox".
 """
 import glob, json, os, subprocess, sys
+from urllib.parse import quote
 from openpyxl import Workbook
 from openpyxl.styles import Alignment, Border, Font, PatternFill, Side
 from openpyxl.formatting.rule import FormulaRule
@@ -28,27 +29,28 @@ def has(folder, pattern):
     return "Yes" if glob.glob(os.path.join(folder, pattern)) else "No"
 
 
-reg = json.load(open(os.path.join(ROOT, "media/videos.json")))
+reg = sorted(json.load(open(os.path.join(ROOT, "media/videos.json"))), key=lambda v: v.get("num", 9999))
 rows = []
 for v in reg:
-    d = os.path.join(ROOT, "media", v["slug"])
+    folder = v.get("folder", v["slug"])
+    d = os.path.join(ROOT, "media", folder)
     vid = os.path.join(d, v["video"])
-    rows.append([v["slug"], v["title"], v["source"], v["received"], v.get("completed", ""),
+    rows.append([v.get("num", ""), folder, v["title"], v["source"], v["received"], v.get("completed", ""),
                  duration(vid) if os.path.exists(vid) else None,
                  "Yes" if os.path.exists(vid) else "No",
                  "Yes" if v.get("intro") else "No",
                  has(d, "*cover-1x1.png"), has(d, "*yt-short-thumbnail*.png"), has(d, "*caption*.txt"),
-                 v.get("notes", ""), f"{GH}/media/{v['slug']}"])
+                 v.get("notes", ""), f"{GH}/media/{quote(folder)}"])
 known = {os.path.basename(v["source"]) for v in reg}
 for f in sorted(glob.glob(os.path.join(ROOT, "inbox", "*.mp4")), key=os.path.getmtime):
     if os.path.basename(f) in known:
         continue
-    rows.append(["", os.path.splitext(os.path.basename(f))[0], os.path.basename(f), "", "", duration(f),
+    rows.append(["", "", os.path.splitext(os.path.basename(f))[0], os.path.basename(f), "", "", duration(f),
                  "No", "No", "No", "No", "No", "Waiting in inbox", f"{GH}/inbox"])
 
 wb = Workbook()
 ws = wb.active; ws.title = "Videos"
-head = ["#", "Slug", "Title", "Source file", "Received", "Completed", "Duration (s)", "Video + logo",
+head = ["Excel #", "Folder", "Title", "Source file", "Received", "Completed", "Duration (s)", "Video + logo",
         "1 s cover intro", "Cover 1:1 (Instagram)", "YT Short thumbnail 9:16", "Caption", "Status", "Notes", "GitHub folder"]
 ws.append(head)
 thin = Side(style="thin", color="D0D5DD")
@@ -56,8 +58,8 @@ for c in ws[1]:
     c.font = Font(name=FONT, bold=True, color="FFFFFF"); c.fill = PatternFill("solid", fgColor="1F2A44")
     c.alignment = Alignment(horizontal="center", vertical="center", wrap_text=True)
 for i, r in enumerate(rows, start=2):
-    slug, title, src, rec, done, dur, logo, intro, cover, thumb, cap, notes, link = r
-    ws.append([i - 1, slug, title, src, rec, done, dur, logo, intro, cover, thumb, cap,
+    num, slug, title, src, rec, done, dur, logo, intro, cover, thumb, cap, notes, link = r
+    ws.append([f"{num:03d}" if num != "" else "", slug, title, src, rec, done, dur, logo, intro, cover, thumb, cap,
                f'=IF(COUNTIF(H{i}:L{i},"Yes")=5,"Done",IF(B{i}="","In inbox","In progress"))', notes, "Open folder"])
     ws.cell(i, 15).hyperlink = link; ws.cell(i, 15).font = Font(name=FONT, color="0563C1", underline="single")
     for c in ws[i]:
@@ -74,7 +76,7 @@ ws.conditional_formatting.add(f"M2:M{last}", FormulaRule(formula=['M2="Done"'], 
 ws.conditional_formatting.add(f"M2:M{last}", FormulaRule(formula=['M2="In progress"'], fill=amber, font=Font(name=FONT, bold=True)))
 ws.conditional_formatting.add(f"M2:M{last}", FormulaRule(formula=['M2="In inbox"'], fill=grey, font=Font(name=FONT, bold=True)))
 dv = DataValidation(type="list", formula1='"Yes,No"', allow_blank=True); ws.add_data_validation(dv); dv.add(f"H2:L{last}")
-for col, w in zip("ABCDEFGHIJKLMNO", [5, 22, 46, 40, 12, 12, 11, 11, 11, 13, 14, 10, 13, 40, 14]):
+for col, w in zip("ABCDEFGHIJKLMNO", [8, 30, 46, 40, 12, 12, 11, 11, 11, 13, 14, 10, 13, 40, 14]):
     ws.column_dimensions[col].width = w
 ws.row_dimensions[1].height = 32
 ws.freeze_panes = "C2"; ws.auto_filter.ref = f"A1:O{last}"
