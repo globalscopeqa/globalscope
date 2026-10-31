@@ -41,7 +41,10 @@ def main():
     else:
         fc = intro + "[iv][mv]concat=n=2:v=1:a=0[v]"
         maps = ["-map", "[v]"]
-    cmd += ["-filter_complex", fc, *maps, "-c:v", "libx264", "-preset", "medium", "-crf", "18", "-movflags", "+faststart", a.out]
+    # cap at the input's video bitrate so the file stays about the size of the source
+    br = int(v.get("bit_rate") or 0) or 8_000_000
+    cmd += ["-filter_complex", fc, *maps, "-c:v", "libx264", "-preset", "medium", "-crf", "18",
+            "-maxrate", str(int(br * 1.1)), "-bufsize", str(br * 2), "-movflags", "+faststart", a.out]
     subprocess.check_call(cmd)
     print("wrote", a.out)
 

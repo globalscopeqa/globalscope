@@ -65,9 +65,13 @@ def main():
     ov.alpha_composite(logo.resize((lw, lh), Image.LANCZOS), (cx - lw // 2, cy - lh // 2))
     ov.save(f"{tmp}/badge.png")
 
+    # keep the file about the size of the source: high quality, but capped at the source's video bitrate
+    br = int(subprocess.check_output(["ffprobe", "-v", "error", "-select_streams", "v:0", "-show_entries", "stream=bit_rate",
+                                      "-of", "csv=p=0", a.src]).strip() or 0) or 8_000_000
     subprocess.check_call(["ffmpeg", "-v", "error", "-y", "-i", a.src, "-i", f"{tmp}/badge.png",
                            "-filter_complex", "[0:v][1:v]overlay=0:0:format=auto,format=yuv420p[v]",
                            "-map", "[v]", "-map", "0:a?", "-c:v", "libx264", "-preset", "medium", "-crf", "18",
+                           "-maxrate", str(int(br * 1.1)), "-bufsize", str(br * 2),
                            "-c:a", "copy", "-movflags", "+faststart", a.out])
 
     # verification sheet
