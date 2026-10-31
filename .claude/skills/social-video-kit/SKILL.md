@@ -14,14 +14,14 @@ House rules for every video request from this user. Follow them without asking a
 | Instagram cover photo | **1:1, 1080×1080 PNG** | `<slug>-cover-1x1.png` |
 | YouTube Short thumbnail | **9:16, 1080×1920 PNG** | `<slug>-yt-short-thumbnail.png` |
 | Caption ("capcha" = social caption) | text file | `<slug>-caption.txt` |
-| Logo-swapped video | same as source (720×1280 MP4) | `<slug>-globalscope.mp4` |
+| Final video: logo swapped **+ 1 s cover intro** | same as source (720×1280 MP4) | `<slug>-globalscope.mp4` |
 
-A "cover" always means the Instagram cover: make the 1:1 one. When they ask for a "thumbnail" or "YT Short", make the 9:16 one. When they ask for both, make both. Never switch sizes unless the user asks for a different size in that request.
+**Every video gets its 1:1 cover as a 1-second intro** (step 5): always make the cover first, then add it. A "cover" always means the Instagram cover: make the 1:1 one. When they ask for a "thumbnail" or "YT Short", make the 9:16 one. When they ask for both, make both. Never switch sizes unless the user asks for a different size in that request.
 
 ## Where things go
 
 - Work in the session scratchpad: one folder per video.
-- Deliver every file with SendUserFile, then copy it to `media/<slug>/` in this repo, commit, and push to the session's branch. Give the GitHub link `https://github.com/globalscopeqa/globalscope/tree/<branch>/media/<slug>`, because the scratchpad is deleted when the session ends.
+- **All files are stored on GitHub** (the user's standing instruction): deliver every file with SendUserFile, then copy it to `media/<slug>/` in this repo, commit, and push to the session's branch. When a video is updated, replace the file in place under the same name; git keeps the history. Give the GitHub link `https://github.com/globalscopeqa/globalscope/tree/<branch>/media/<slug>`, because the scratchpad is deleted when the session ends.
 - Brand assets: logo `globalscope-logo.png` (repo root, black text on transparent, needs a white backing). Website: globalscope.qa. Brand red `#e0004d`, cyan accent `#3fd8ff`, amber `#ffb547`. Fonts: Inter (headlines) and JetBrains Mono (tags), both installed.
 
 ## 1. Insert or replace the logo in a video
@@ -68,7 +68,15 @@ Config (see `examples/cdu-thumb.json`):
 
 The hook should be short and curiosity-driven, not the full title: "FROM GRID / TO GPU", "HOW AI CHIPS / STAY COOL". Use amber for power/energy topics and cyan for cooling/network topics.
 
-## 5. Caption ("capcha")
+## 5. Add the 1:1 cover as a 1-second intro (always)
+
+```sh
+python3 -I .claude/skills/social-video-kit/scripts/add-cover-intro.py <slug>-logo.mp4 <slug>-cover-1x1.png <slug>-globalscope.mp4
+```
+
+This prepends a 1-second intro. The square cover sits centred at full width on a blurred, darkened copy of itself that fills the 9:16 frame. The intro is added before the footage, so nothing is hidden, and the original audio starts in sync after it, with silence under the intro. `--seconds N` changes the length, but only when the user asks. Verify by grabbing a frame at 0.5 s and checking the video is exactly 1 s longer than the source. For an audio-sync check, decode the audio to raw PCM rather than using `-ss`, because seek-based volume checks are imprecise.
+
+## 6. Caption ("capcha")
 
 Write `<slug>-caption.txt` with three sections:
 1. **INSTAGRAM / TIKTOK / FACEBOOK**: hook question with emojis, a numbered 1️⃣–7️⃣ walk-through of the stages shown in the video, a one-line takeaway, a CTA ("Planning …? DM us or visit globalscope.qa"), and 10–14 hashtags including #Qatar #Doha #GlobalScope.
@@ -77,6 +85,6 @@ Write `<slug>-caption.txt` with three sections:
 
 Base the stages on what the video actually shows (read frames and on-screen labels). Don't claim services Global Scope may not offer; keep it to "help organisations plan/integrate/manage".
 
-## 6. Always verify before delivering
+## 7. Always verify before delivering
 
 Read every PNG you render (and the swap-logo check image). Look for text collisions, leaked video subtitles, clipped labels, and the old logo showing. Fix and re-render before sending.
