@@ -40,32 +40,32 @@
     "notes": "No narration; 40 s build sequence. Caption based on the user's own description."
   },
   {
-    "slug": "Video_by_builddatacentres_1",
+    "slug": "ai-power-200mw",
     "title": "How do you design the electrical infrastructure for a 200 MW AI Data Centre?",
     "source": "Video by builddatacentres_1.mp4",
     "received": "2026-10-31",
     "completed": "2026-10-31",
-    "video": "Video_by_builddatacentres_1-globalscope.mp4",
+    "video": "ai-power-200mw-globalscope.mp4",
     "intro": true,
     "notes": "builddatacentres_posts.xlsx row 2; logo swapped (user confirmed permission)."
   },
   {
-    "slug": "Video_by_builddatacentres_2",
+    "slug": "data-centre-go-live",
     "title": "How does a Data Centre actually go LIVE?",
     "source": "Video by builddatacentres_2.mp4",
     "received": "2026-10-31",
     "completed": "2026-10-31",
-    "video": "Video_by_builddatacentres_2-globalscope.mp4",
+    "video": "data-centre-go-live-globalscope.mp4",
     "intro": true,
     "notes": "builddatacentres_posts.xlsx row 3; logo swapped (user confirmed permission)."
   },
   {
-    "slug": "Video_by_builddatacentres_3",
+    "slug": "inside-a-rack",
     "title": "What’s actually inside a Data-Centre Rack?",
     "source": "Video by builddatacentres_3.mp4",
     "received": "2026-10-31",
     "completed": "2026-10-31",
-    "video": "Video_by_builddatacentres_3-globalscope.mp4",
+    "video": "inside-a-rack-globalscope.mp4",
     "intro": true,
     "notes": "builddatacentres_posts.xlsx row 4; logo swapped (user confirmed permission)."
   }
