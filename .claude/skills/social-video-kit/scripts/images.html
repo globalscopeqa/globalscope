@@ -1,0 +1,91 @@
+<!doctype html><html><head><meta charset="utf-8"><title>Social Images</title><style>body{margin:0;background:#000}</style></head><body>
+<canvas id="c"></canvas>
+<script>
+const cv = document.getElementById('c'), x = cv.getContext('2d');
+const load = s => new Promise((ok, no) => { const i = new Image(); i.onload = () => ok(i); i.onerror = () => no(new Error('cannot load ' + s)); i.src = s; });
+function t(s, X, Y, size, col, w = 800, font = 'Inter', align = 'left', sp = 0) {
+  x.font = `${w} ${size}px "${font}"`; x.fillStyle = col; x.textAlign = align; x.textBaseline = 'middle'; x.letterSpacing = sp + 'px'; x.fillText(s, X, Y); x.letterSpacing = '0px';
+}
+function badge(logo, cx, cy, r) {
+  x.fillStyle = '#cdd2da'; x.beginPath(); x.arc(cx, cy, r + 6, 0, 7); x.fill();
+  x.fillStyle = '#fff'; x.beginPath(); x.arc(cx, cy, r, 0, 7); x.fill();
+  const lw = r * 1.68, lh = lw * logo.height / logo.width; x.drawImage(logo, cx - lw / 2, cy - lh / 2, lw, lh);
+}
+async function fonts() {
+  await Promise.all(['900 120px "Inter"', '800 80px "Inter"', '700 40px "Inter"', '500 30px "Inter"', '700 20px "JetBrains Mono"', '600 20px "JetBrains Mono"'].map(f => document.fonts.load(f)));
+}
+
+// 1:1 cover, 1080x1080
+async function cover(cfg) {
+  const S = 1080; cv.width = S; cv.height = S; await fonts();
+  const bg = await load(cfg.bg), logo = await load(cfg.logo);
+  x.drawImage(bg, 0, cfg.sy ?? 220, 720, 720, 0, 0, S, S);
+  const g = x.createLinearGradient(0, 0, 0, S);
+  g.addColorStop(0, 'rgba(3,6,12,0.94)'); g.addColorStop(0.42, 'rgba(3,6,12,0.62)'); g.addColorStop(0.62, 'rgba(3,6,12,0.15)'); g.addColorStop(0.82, 'rgba(3,6,12,0.55)'); g.addColorStop(1, 'rgba(3,6,12,0.95)');
+  x.fillStyle = g; x.fillRect(0, 0, S, S);
+  // tag
+  const tagCol = cfg.tagColor || '#ffb547';
+  x.font = '700 21px "JetBrains Mono"'; x.letterSpacing = '3px'; const tw = x.measureText(cfg.tag).width; x.letterSpacing = '0px';
+  x.beginPath(); x.roundRect(54, 64, tw + 70, 56, 28); x.fillStyle = 'rgba(10,10,10,0.6)'; x.fill(); x.strokeStyle = tagCol; x.lineWidth = 2; x.stroke();
+  t(cfg.tag, 54 + (tw + 70) / 2, 93, 21, tagCol, 700, 'JetBrains Mono', 'center', 3);
+  badge(logo, 948, 118, 84);
+  // headline: lines[0..1] white, last line cyan glow
+  const L = cfg.lines, ys = [262, 356, 456];
+  x.shadowColor = 'rgba(0,0,0,0.6)'; x.shadowBlur = 20;
+  L.forEach((s, i) => {
+    const last = i === L.length - 1;
+    if (last) { x.shadowColor = 'rgba(63,216,255,0.9)'; x.shadowBlur = 36; }
+    let size = last ? 100 : 88; x.font = `800 ${size}px "Inter"`; const w = x.measureText(s).width; if (w > 960) size = Math.floor(size * 960 / w);
+    t(s, 54, ys[i + (3 - L.length)], size, last ? '#3fd8ff' : '#f4f8ff', 800);
+  });
+  x.shadowBlur = 0;
+  x.fillStyle = '#e0004d'; x.fillRect(58, 528, 110, 7);
+  t(cfg.sub, 54, 580, 30, 'rgba(255,255,255,0.82)', 500);
+  // steps row
+  const N = cfg.steps; x.font = '700 21px "JetBrains Mono"'; x.letterSpacing = '1px';
+  const ws = N.map(n => x.measureText(n).width + 30); x.letterSpacing = '0px';
+  const gap = 26, total = ws.reduce((a, b) => a + b, 0) + gap * (N.length - 1); let X = (S - total) / 2; const Y = 972;
+  x.strokeStyle = '#3fd8ff'; x.lineWidth = 3; x.shadowColor = '#3fd8ff'; x.shadowBlur = 14; x.beginPath(); x.moveTo(X, Y); x.lineTo(X + total, Y); x.stroke(); x.shadowBlur = 0;
+  N.forEach((n, i) => {
+    const w = ws[i], on = n === cfg.highlight;
+    x.beginPath(); x.roundRect(X, Y - 24, w, 48, 24); x.fillStyle = on ? '#3fd8ff' : 'rgba(8,20,34,0.95)'; x.fill(); x.strokeStyle = on ? '#3fd8ff' : 'rgba(63,216,255,0.8)'; x.lineWidth = 2; x.stroke();
+    t(n, X + w / 2, Y + 1, 21, on ? '#04121c' : '#e8f7ff', 700, 'JetBrains Mono', 'center', 1); X += w + gap;
+  });
+  t('globalscope.qa', S / 2, 1040, 22, 'rgba(255,255,255,0.6)', 600, 'JetBrains Mono', 'center', 4);
+}
+
+// 9:16 YouTube Short thumbnail, 1080x1920
+async function thumb(cfg) {
+  const W = 1080, H = 1920; cv.width = W; cv.height = H; await fonts();
+  const bg = await load(cfg.bg), logo = await load(cfg.logo);
+  const zoom = cfg.zoom ?? 1.42, sw = 720 / zoom, sh = sw * H / W;
+  x.drawImage(bg, cfg.sx ?? (720 - sw) / 2, cfg.sy ?? 10, sw, sh, 0, 0, W, H);
+  const g = x.createLinearGradient(0, 0, 0, H);
+  g.addColorStop(0, 'rgba(2,5,10,0.85)'); g.addColorStop(0.18, 'rgba(2,5,10,0.35)'); g.addColorStop(0.5, 'rgba(2,5,10,0.15)'); g.addColorStop(0.7, 'rgba(2,5,10,0.6)'); g.addColorStop(1, 'rgba(2,5,10,0.97)');
+  x.fillStyle = g; x.fillRect(0, 0, W, H);
+  const v = x.createRadialGradient(W / 2, H * 0.45, 300, W / 2, H * 0.45, 1150); v.addColorStop(0, 'rgba(0,0,0,0)'); v.addColorStop(1, 'rgba(0,0,0,0.6)'); x.fillStyle = v; x.fillRect(0, 0, W, H);
+  badge(logo, W - 150, 160, 104);
+  x.font = '700 30px "JetBrains Mono"'; x.letterSpacing = '4px'; const tw = x.measureText(cfg.tag).width; x.letterSpacing = '0px';
+  x.beginPath(); x.roundRect(60, 128, tw + 60, 64, 32); x.fillStyle = cfg.tagBg; x.fill();
+  t(cfg.tag, 90, 161, 30, cfg.tagFg, 700, 'JetBrains Mono', 'left', 4);
+  let y = cfg.y ?? 1060;
+  // fit every line to the width first, so line spacing can use the real sizes of both neighbours
+  const sizes = cfg.lines.map(L => {
+    x.font = `900 ${L.size}px "Inter"`; x.letterSpacing = '-3px'; const m = x.measureText(L.s).width; x.letterSpacing = '0px';
+    return m > W - 110 ? Math.floor(L.size * (W - 110) / m) : L.size;
+  });
+  cfg.lines.forEach((L, i) => {
+    const size = sizes[i];
+    if (i > 0) y += (sizes[i - 1] + size) / 2 * 0.9;
+    x.font = `900 ${size}px "Inter"`; x.letterSpacing = '-3px'; x.textAlign = 'center'; x.textBaseline = 'middle';
+    x.lineJoin = 'round'; x.lineWidth = size * 0.16; x.strokeStyle = 'rgba(0,0,0,0.85)'; x.strokeText(L.s, W / 2, y);
+    if (L.glow) { x.shadowColor = L.glow; x.shadowBlur = 50; } x.fillStyle = L.col; x.fillText(L.s, W / 2, y); x.shadowBlur = 0; x.letterSpacing = '0px';
+  });
+  y += sizes[sizes.length - 1] * 0.98 + 30; x.font = '700 46px "Inter"'; const sbw = x.measureText(cfg.sub).width + 70;
+  x.beginPath(); x.roundRect(W / 2 - sbw / 2, y - 42, sbw, 84, 42); x.fillStyle = cfg.subBg; x.fill();
+  t(cfg.sub, W / 2, y + 2, 46, cfg.subFg, 700, 'Inter', 'center');
+  t(cfg.footer || '60-SECOND EXPLAINER', W / 2, H - 150, 30, 'rgba(255,255,255,0.75)', 700, 'JetBrains Mono', 'center', 5);
+}
+
+window.draw = async (mode, cfg) => { await (mode === 'cover' ? cover : thumb)(cfg); return cv.toDataURL('image/png'); };
+</script></body></html>

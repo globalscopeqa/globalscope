@@ -1,0 +1,10 @@
+{
+  "bg": "bg_53.png",
+  "zoom": 1.42, "sx": 100, "sy": 20, "y": 1170,
+  "tag": "DATA CENTRE 101", "tagBg": "#ffb547", "tagFg": "#1a0f00",
+  "lines": [
+    { "s": "FROM GRID", "size": 190, "col": "#ffffff" },
+    { "s": "TO GPU", "size": 250, "col": "#ffcf5a", "glow": "rgba(255,170,40,0.9)" }
+  ],
+  "sub": "How power reaches AI chips", "subBg": "rgba(63,216,255,0.95)", "subFg": "#04121c"
+}

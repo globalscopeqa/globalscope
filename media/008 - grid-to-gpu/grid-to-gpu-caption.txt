@@ -1,0 +1,40 @@
+INSTAGRAM / TIKTOK / FACEBOOK
+-----------------------------
+How does power actually reach a GPU? ⚡➡️🖥️
+
+A GPU may be the final destination, but the journey starts kilometres away:
+1️⃣ Grid: high-voltage utility supply arrives at the site
+2️⃣ MV switchgear: metering, protection and fault isolation
+3️⃣ Transformer: steps voltage down for the facility
+4️⃣ LV distribution: power routed to critical loads
+5️⃣ UPS: conditions power and bridges outages until generators take over
+6️⃣ Busway + rack PDUs: power delivered to every rack
+7️⃣ Server PSU + VRMs: converted to the exact low voltage the GPU needs ✅
+
+From grid to GPU, every stage transforms, protects or distributes power. Get one wrong and the whole rack goes dark.
+
+🏗️ Planning a server room or data centre upgrade? DM us or visit globalscope.qa
+
+#DataCenter #DataCentre #GPU #AIInfrastructure #UPS #PowerDistribution #CriticalPower #ITInfrastructure #Qatar #Doha #ManagedIT #TechExplained #GlobalScope
+
+LINKEDIN
+--------
+Every AI workload ends at a GPU. Every GPU depends on a power chain most people never see.
+
+→ Utility grid supply enters the site at high voltage
+→ MV switchgear meters, protects and isolates faults
+→ Transformers step voltage down for the facility
+→ LV switchboards distribute power to critical loads
+→ UPS systems condition power and ride through outages until generators start
+→ Busways and rack PDUs feed each cabinet
+→ Server power supplies and VRMs deliver the precise low voltage a GPU needs
+
+As rack densities climb with AI, each link in that chain has less room for error. At Global Scope we've been helping organisations across Qatar design, power and manage reliable IT infrastructure since 2009.
+
+Planning a server room, data centre upgrade or UPS refresh? Let's talk: globalscope.qa
+
+#DataCentre #AIInfrastructure #CriticalPower #ITInfrastructure #Qatar
+
+YOUTUBE SHORTS TITLE
+--------------------
+How Does Power Reach a GPU? (Grid → GPU in 60s) #shorts

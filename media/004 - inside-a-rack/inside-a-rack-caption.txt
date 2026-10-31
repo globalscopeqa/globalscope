@@ -1,0 +1,41 @@
+INSTAGRAM / TIKTOK / FACEBOOK
+-----------------------------
+What's actually inside a data-centre rack? ⚡🌐❄️
+
+It's much more than a cabinet full of servers. It's where power, network, compute and cooling all meet:
+1️⃣ Rack PDUs distribute power to every server ⚡
+2️⃣ Network switches and fibre carry the data 🌐
+3️⃣ Rack-mounted servers provide the compute 🖥️
+4️⃣ Front-to-rear airflow removes the heat ❄️
+5️⃣ Rack units (U) organise it all vertically. 1U = 44.45 mm 📏
+6️⃣ Racks form rows, rows form a data hall
+7️⃣ The data hall powers cloud, AI and everything digital 🚀
+
+Power follows one path, data another, and cooling handles the heat. All three meet in the rack.
+
+👇 What should we break down next: rack power, high-density AI racks, or rack cooling?
+🖥️ Planning a server room or rack upgrade? DM us or visit globalscope.qa
+
+#DataCentre #ServerRack #DataCenterEngineering #DigitalInfrastructure #Networking #ITInfrastructure #ServerRoom #PDU #Cooling #TechExplained #Qatar #Doha #GlobalScope
+
+LINKEDIN
+--------
+What's actually inside a data-centre rack?
+
+A rack is much more than a cabinet full of servers. It's the structured point where compute, network connectivity, electrical power and thermal management come together.
+
+→ Rack PDUs distribute power to servers
+→ Network switches and fibre connections carry data
+→ Rack-mounted servers provide compute capacity
+→ Front-to-rear airflow removes heat from air-cooled equipment: cool air in the front, hot air out the rear
+→ Rack units (U) organise equipment vertically, and 1U = 44.45 mm
+
+Power follows its own path. Data follows another. Cooling handles the heat. All three meet at one critical point: the rack. One rack becomes a row, rows become a data hall, and the data hall becomes the engine behind cloud, AI and digital services.
+
+At Global Scope we've been designing, integrating and managing server rooms and IT infrastructure across Qatar since 2009. Planning a server room or rack refresh? Let's talk: globalscope.qa
+
+#DataCentre #ServerRack #ITInfrastructure #Networking #Qatar
+
+YOUTUBE SHORTS TITLE
+--------------------
+What's Inside a Data Centre Rack? (Explained in 60s) #shorts

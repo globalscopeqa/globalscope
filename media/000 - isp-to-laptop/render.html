@@ -1,0 +1,447 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>ISP to Laptop</title>
+<style>html,body{margin:0;background:#000}canvas{display:block}</style></head>
+<body><canvas id="c" width="720" height="1280"></canvas>
+<script>
+const W = 720, H = 1280;
+const cv = document.getElementById('c'), ctx = cv.getContext('2d');
+const logo = new Image(); logo.src = 'logo.png';
+const C = {
+  bg: '#060a12', line: 'rgba(150,180,225,0.55)', dim: 'rgba(150,180,225,0.22)',
+  cyan: '#3fd8ff', blue: '#2f7dff', amber: '#ffb547', red: '#ff3b5c', white: '#f4f8ff', brand: '#e0004d'
+};
+const SANS = 'Inter', MONO = 'JetBrains Mono';
+let TL = null;
+
+// ---------- helpers ----------
+const clamp = (v, a = 0, b = 1) => Math.max(a, Math.min(b, v));
+const lerp = (a, b, u) => a + (b - a) * u;
+const ease = u => { u = clamp(u); return u < .5 ? 4 * u * u * u : 1 - Math.pow(-2 * u + 2, 3) / 2; };
+const ramp = (t, a, b) => ease((t - a) / (b - a));
+const hash = n => { const x = Math.sin(n * 127.1 + 311.7) * 43758.5453; return x - Math.floor(x); };
+
+function glow(color, blur) { ctx.shadowColor = color; ctx.shadowBlur = blur; }
+function noGlow() { ctx.shadowBlur = 0; }
+
+function poly(pts, color, w = 2, close = false) {
+  ctx.beginPath(); ctx.moveTo(pts[0][0], pts[0][1]);
+  for (let i = 1; i < pts.length; i++) ctx.lineTo(pts[i][0], pts[i][1]);
+  if (close) ctx.closePath();
+  ctx.strokeStyle = color; ctx.lineWidth = w; ctx.stroke();
+}
+function rrect(x, y, w, h, r) {
+  ctx.beginPath(); ctx.moveTo(x + r, y); ctx.arcTo(x + w, y, x + w, y + h, r); ctx.arcTo(x + w, y + h, x, y + h, r);
+  ctx.arcTo(x, y + h, x, y, r); ctx.arcTo(x, y, x + w, y, r); ctx.closePath();
+}
+function box(x, y, w, h, stroke = C.line, fill = 'rgba(20,32,52,0.55)', r = 6, lw = 2) {
+  rrect(x, y, w, h, r); ctx.fillStyle = fill; ctx.fill(); ctx.strokeStyle = stroke; ctx.lineWidth = lw; ctx.stroke();
+}
+function text(s, x, y, size, color = C.white, font = SANS, weight = 500, align = 'center', spacing = 0) {
+  ctx.font = `${weight} ${size}px "${font}"`; ctx.fillStyle = color; ctx.textAlign = align; ctx.textBaseline = 'middle';
+  if (spacing) ctx.letterSpacing = spacing + 'px'; else ctx.letterSpacing = '0px';
+  ctx.fillText(s, x, y); ctx.letterSpacing = '0px';
+}
+function pathLen(pts) { let L = 0; for (let i = 1; i < pts.length; i++) L += Math.hypot(pts[i][0] - pts[i - 1][0], pts[i][1] - pts[i - 1][1]); return L; }
+function pathAt(pts, u) {
+  const L = pathLen(pts) * clamp(u); let acc = 0;
+  for (let i = 1; i < pts.length; i++) {
+    const d = Math.hypot(pts[i][0] - pts[i - 1][0], pts[i][1] - pts[i - 1][1]);
+    if (acc + d >= L) { const k = (L - acc) / (d || 1); return [lerp(pts[i - 1][0], pts[i][0], k), lerp(pts[i - 1][1], pts[i][1], k)]; }
+    acc += d;
+  }
+  return pts[pts.length - 1];
+}
+function partial(pts, u, color, w) { // draw path up to fraction u
+  if (u <= 0) return; const L = pathLen(pts) * clamp(u); let acc = 0; const out = [pts[0]];
+  for (let i = 1; i < pts.length; i++) {
+    const d = Math.hypot(pts[i][0] - pts[i - 1][0], pts[i][1] - pts[i - 1][1]);
+    if (acc + d >= L) { const k = (L - acc) / (d || 1); out.push([lerp(pts[i - 1][0], pts[i][0], k), lerp(pts[i - 1][1], pts[i][1], k)]); break; }
+    out.push(pts[i]); acc += d;
+  }
+  poly(out, color, w);
+}
+function dot(x, y, r, color, blur = 14) { glow(color, blur); ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2); ctx.fillStyle = color; ctx.fill(); noGlow(); }
+function packets(pts, t, n, speed, color, r = 4, trail = true) { // n packets looping along path
+  const L = pathLen(pts);
+  for (let k = 0; k < n; k++) {
+    const u = ((t * speed / L) + k / n) % 1;
+    if (trail) for (let j = 1; j <= 4; j++) { const p = pathAt(pts, u - j * 8 / L); if (u - j * 8 / L > 0) { ctx.globalAlpha *= 1; dot(p[0], p[1], r * (1 - j * 0.18), color + '66', 0); } }
+    const p = pathAt(pts, u); dot(p[0], p[1], r, color);
+  }
+}
+function callout(label, ax, ay, lx, ly, t0, lt, color = C.cyan) { // leader line + label, animated in from t0
+  const a = ramp(lt, t0, t0 + 0.6); if (a <= 0) return;
+  ctx.save(); ctx.globalAlpha *= a;
+  dot(ax, ay, 4, color, 10);
+  partial([[ax, ay], [lx, ly]], a, 'rgba(220,235,255,0.7)', 1.5);
+  const left = lx < ax;
+  ctx.font = `600 15px "${MONO}"`; ctx.letterSpacing = '1.5px'; const tw = ctx.measureText(label).width; ctx.letterSpacing = '0px';
+  const bx = clamp(left ? lx - tw - 18 : lx, 22, W - 22 - tw - 18); box(bx, ly - 15, tw + 18, 30, 'rgba(220,235,255,0.5)', 'rgba(8,14,26,0.85)', 4, 1.2);
+  text(label, bx + 9, ly + 1, 15, C.white, MONO, 600, 'left', 1.5);
+  ctx.restore();
+}
+function burst(x, y, age, color) {
+  if (age < 0 || age > 0.6) return; const u = age / 0.6;
+  ctx.save(); ctx.globalAlpha *= 1 - u; ctx.beginPath(); ctx.arc(x, y, 6 + 26 * u, 0, Math.PI * 2);
+  ctx.strokeStyle = color; ctx.lineWidth = 3; glow(color, 16); ctx.stroke(); noGlow(); ctx.restore();
+}
+
+// ---------- icons ----------
+function icon(name, x, y, s, color, lw = 2) {
+  ctx.save(); ctx.translate(x, y); ctx.scale(s / 24, s / 24); ctx.strokeStyle = color; ctx.fillStyle = color; ctx.lineWidth = lw * 24 / s; ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+  ctx.beginPath();
+  if (name === 'isp') { ctx.arc(0, 0, 10, 0, 7); ctx.moveTo(-10, 0); ctx.lineTo(10, 0); ctx.ellipse(0, 0, 4.5, 10, 0, 0, 7); ctx.moveTo(-8.5, -5); ctx.lineTo(8.5, -5); ctx.moveTo(-8.5, 5); ctx.lineTo(8.5, 5); }
+  else if (name === 'fw') { ctx.moveTo(0, -11); ctx.lineTo(9, -7); ctx.lineTo(9, 0); ctx.quadraticCurveTo(9, 8, 0, 11); ctx.quadraticCurveTo(-9, 8, -9, 0); ctx.lineTo(-9, -7); ctx.closePath(); ctx.moveTo(-4, 0); ctx.lineTo(-1, 3.5); ctx.lineTo(4.5, -3.5); }
+  else if (name === 'core') { ctx.rect(-11, -5, 22, 10); ctx.moveTo(-7, 0); ctx.lineTo(-5, 0); ctx.moveTo(-2, 0); ctx.lineTo(0, 0); ctx.moveTo(3, 0); ctx.lineTo(5, 0); ctx.moveTo(-6, -5); ctx.lineTo(-6, -10); ctx.moveTo(6, -5); ctx.lineTo(6, -10); ctx.moveTo(-6, 5); ctx.lineTo(-6, 10); ctx.moveTo(6, 5); ctx.lineTo(6, 10); }
+  else if (name === 'access') { ctx.rect(-11, -4, 22, 8); ctx.moveTo(-6, 4); ctx.lineTo(-9, 10); ctx.moveTo(0, 4); ctx.lineTo(0, 10); ctx.moveTo(6, 4); ctx.lineTo(9, 10); ctx.moveTo(0, -4); ctx.lineTo(0, -10); }
+  else if (name === 'wifi') { ctx.arc(0, 8, 16, -Math.PI * .78, -Math.PI * .22); ctx.moveTo(0 + 11 * Math.cos(-Math.PI * .78), 8 + 11 * Math.sin(-Math.PI * .78)); ctx.arc(0, 8, 11, -Math.PI * .78, -Math.PI * .22); ctx.moveTo(0 + 6 * Math.cos(-Math.PI * .78), 8 + 6 * Math.sin(-Math.PI * .78)); ctx.arc(0, 8, 6, -Math.PI * .78, -Math.PI * .22); ctx.stroke(); ctx.beginPath(); ctx.arc(0, 8, 1.6, 0, 7); ctx.fill(); ctx.beginPath(); }
+  else if (name === 'device') { ctx.rect(-8, -7, 16, 11); ctx.moveTo(-11, 7); ctx.lineTo(11, 7); ctx.lineTo(9, 4); ctx.lineTo(-9, 4); ctx.closePath(); }
+  else if (name === 'phone') { ctx.rect(-7, -3, 14, 10); ctx.moveTo(-9, -3); ctx.quadraticCurveTo(0, -12, 9, -3); ctx.moveTo(-3, 1); ctx.lineTo(3, 1); ctx.moveTo(-3, 4); ctx.lineTo(3, 4); }
+  else if (name === 'camera') { ctx.rect(-9, -5, 14, 9); ctx.moveTo(5, -2); ctx.lineTo(10, -5); ctx.lineTo(10, 4); ctx.lineTo(5, 1); ctx.moveTo(-6, 4); ctx.lineTo(-6, 10); ctx.lineTo(-10, 10); }
+  else if (name === 'ap') { ctx.ellipse(0, 0, 11, 4, 0, 0, 7); ctx.moveTo(-6, -8); ctx.quadraticCurveTo(0, -13, 6, -8); ctx.moveTo(-3, -6); ctx.quadraticCurveTo(0, -8, 3, -6); }
+  else if (name === 'server') { ctx.rect(-9, -11, 18, 7); ctx.rect(-9, -3, 18, 7); ctx.rect(-9, 5, 18, 7); ctx.moveTo(-5, -7.5); ctx.lineTo(-3, -7.5); ctx.moveTo(-5, .5); ctx.lineTo(-3, .5); ctx.moveTo(-5, 8.5); ctx.lineTo(-3, 8.5); }
+  else if (name === 'bolt') { ctx.moveTo(2, -11); ctx.lineTo(-6, 2); ctx.lineTo(0, 2); ctx.lineTo(-2, 11); ctx.lineTo(6, -2); ctx.lineTo(0, -2); ctx.closePath(); ctx.fill(); }
+  else if (name === 'lock') { ctx.rect(-7, -1, 14, 11); ctx.moveTo(-4, -1); ctx.lineTo(-4, -5); ctx.arc(0, -5, 4, Math.PI, 0); ctx.lineTo(4, -1); }
+  ctx.stroke(); ctx.restore();
+}
+function laptop(cx, cy, w, color = C.line) { // returns screen rect
+  const h = w * 0.62, sx = cx - w / 2, sy = cy - h;
+  box(sx, sy, w, h, color, 'rgba(14,24,42,0.9)', 10, 2.5);
+  poly([[sx - w * 0.1, cy + 4], [sx + w * 1.1, cy + 4], [sx + w * 1.04, cy + 22], [sx - w * 0.04, cy + 22]], color, 2.5, true);
+  return { x: sx + 12, y: sy + 12, w: w - 24, h: h - 24 };
+}
+
+// ---------- background ----------
+function background(t) {
+  const g = ctx.createLinearGradient(0, 0, 0, H); g.addColorStop(0, '#070d1a'); g.addColorStop(.55, '#05080f'); g.addColorStop(1, '#03050a');
+  ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
+  const rg = ctx.createRadialGradient(360, 520, 40, 360, 520, 520); rg.addColorStop(0, 'rgba(40,110,220,0.16)'); rg.addColorStop(1, 'rgba(0,0,0,0)');
+  ctx.fillStyle = rg; ctx.fillRect(0, 0, W, H);
+  ctx.strokeStyle = 'rgba(90,130,200,0.07)'; ctx.lineWidth = 1; const off = (t * 6) % 40;
+  ctx.beginPath(); for (let x = -40 + off; x < W; x += 40) { ctx.moveTo(x, 0); ctx.lineTo(x, H); } for (let y = -40 + off; y < H; y += 40) { ctx.moveTo(0, y); ctx.lineTo(W, y); } ctx.stroke();
+  for (let i = 0; i < 40; i++) { const x = hash(i) * W, y = (hash(i + 99) * H - t * (8 + hash(i + 7) * 14)) % H; dot(x, y < 0 ? y + H : y, 1 + hash(i + 3) * 1.4, 'rgba(120,190,255,0.35)', 0); }
+}
+
+// ---------- scenes ----------
+const SCENES = [
+// 0: hook
+(lt, D) => {
+  const gx = 360, gy = 330, r = 125, a = ramp(lt, 0, 0.8);
+  ctx.save(); ctx.globalAlpha *= a; glow(C.blue, 18);
+  ctx.strokeStyle = 'rgba(110,170,255,0.75)'; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(gx, gy, r, 0, 7); ctx.stroke(); noGlow();
+  ctx.lineWidth = 1.2; ctx.strokeStyle = 'rgba(110,170,255,0.4)';
+  for (let k = -2; k <= 2; k++) { const yy = gy + k * r * 0.36, rr = Math.sqrt(r * r - (k * r * 0.36) ** 2); ctx.beginPath(); ctx.ellipse(gx, yy, rr, rr * 0.18, 0, 0, 7); ctx.stroke(); }
+  for (let k = 0; k < 6; k++) { const ph = (lt * 0.35 + k / 6) % 1, ww = Math.abs(Math.cos(ph * Math.PI)) * r; ctx.beginPath(); ctx.ellipse(gx, gy, ww, r, 0, 0, 7); ctx.stroke(); }
+  ctx.restore();
+  const path = [[gx, gy + r], [gx, 470], [gx, 545]];
+  ctx.setLineDash([6, 8]); poly(path, C.dim, 2); ctx.setLineDash([]);
+  if (lt > 0.8) packets(path, lt, 3, 160, C.cyan, 4.5);
+  const s = laptop(360, 770, 330, C.line);
+  // browser
+  box(s.x, s.y, s.w, 26, 'rgba(150,180,225,0.3)', 'rgba(30,45,70,0.8)', 4, 1);
+  [0, 1, 2].forEach(i => dot(s.x + 14 + i * 14, s.y + 13, 3.5, ['#ff5f57', '#febc2e', '#28c840'][i], 0));
+  box(s.x + 60, s.y + 6, s.w - 72, 14, 'rgba(0,0,0,0)', 'rgba(255,255,255,0.08)', 7, 0);
+  const load = ramp(lt, 0.8, 2.6);
+  ctx.fillStyle = C.cyan; glow(C.cyan, 10); ctx.fillRect(s.x, s.y + 26, s.w * load, 3); noGlow();
+  const c = ramp(lt, 2.4, 3.2); ctx.save(); ctx.globalAlpha *= c;
+  box(s.x + 14, s.y + 42, s.w * 0.55, 18, 'rgba(0,0,0,0)', 'rgba(120,180,255,0.5)', 4, 0);
+  for (let i = 0; i < 4; i++) box(s.x + 14, s.y + 72 + i * 16, s.w * (0.85 - i * 0.12), 8, 'rgba(0,0,0,0)', 'rgba(255,255,255,0.18)', 3, 0);
+  box(s.x + s.w * 0.62, s.y + 42, s.w * 0.33, 70, 'rgba(0,0,0,0)', 'rgba(63,216,255,0.22)', 6, 0);
+  ctx.restore();
+  callout('LOADED IN 12 ms', 360 + 150, 600, 560, 520, 2.8, lt);
+  const q = ramp(lt, 3.6, 4.4);
+  if (q > 0) { ctx.save(); ctx.globalAlpha *= q; glow(C.cyan, 30); text('?', 360, 330, 150, 'rgba(63,216,255,0.9)', SANS, 300); noGlow(); ctx.restore(); }
+},
+// 1: ISP fibre + demarc
+(lt, D) => {
+  const gy = 650;
+  poly([[30, gy], [690, gy]], C.line, 2);
+  ctx.fillStyle = 'rgba(40,60,90,0.18)'; ctx.fillRect(30, gy, 660, 170);
+  for (let i = 0; i < 22; i++) dot(40 + hash(i) * 640, gy + 20 + hash(i + 5) * 140, 1.5, 'rgba(150,180,225,0.25)', 0);
+  // ISP cabinet
+  box(70, gy - 120, 80, 120, C.line, 'rgba(20,32,52,0.8)', 4);
+  for (let i = 0; i < 4; i++) box(82, gy - 106 + i * 26, 56, 16, C.dim, 'rgba(0,0,0,0)', 2, 1);
+  dot(130, gy - 98, 3, C.cyan, 8);
+  // building
+  const bx = 380, by = 230, bw = 280, bh = gy - by;
+  box(bx, by, bw, bh, C.line, 'rgba(18,28,46,0.85)', 4, 2.5);
+  for (let r = 0; r < 6; r++) for (let c = 0; c < 4; c++) { const lit = hash(r * 7 + c) > 0.45 ? 'rgba(255,214,140,0.28)' : 'rgba(120,160,220,0.1)'; box(bx + 24 + c * 64, by + 24 + r * 54, 40, 30, C.dim, lit, 2, 1); }
+  box(bx + 110, gy - 60, 60, 60, C.line, 'rgba(10,16,28,0.9)', 2, 2);
+  // fibre route
+  const fib = [[110, gy], [110, gy + 90], [430, gy + 90], [430, gy - 70]];
+  const draw = ramp(lt, 0.3, 2.2);
+  ctx.save(); glow(C.cyan, 10); partial(fib, draw, 'rgba(63,216,255,0.55)', 5); noGlow(); partial(fib, draw, 'rgba(220,250,255,0.9)', 1.5); ctx.restore();
+  // demarc box
+  const da = ramp(lt, 2.0, 2.6);
+  ctx.save(); ctx.globalAlpha *= da; glow(C.cyan, 22 + 10 * Math.sin(lt * 4)); box(408, gy - 110, 44, 44, C.cyan, 'rgba(10,40,60,0.95)', 4, 2.5); noGlow();
+  icon('isp', 430, gy - 88, 22, C.cyan); ctx.restore();
+  if (lt > 2.2) for (let k = 0; k < 7; k++) { const u = ((lt * 0.55) + k / 7) % 1; const p = pathAt(fib, u); dot(p[0], p[1], 3.5, '#e8fbff', 16); }
+  callout('ISP CABINET', 110, gy - 120, 150, 330, 0.8, lt);
+  callout('1550 nm SINGLE-MODE FIBRE', 270, gy + 90, 190, 780, 1.6, lt);
+  callout('DEMARC POINT', 408, gy - 88, 330, 470, 3.6, lt);
+  // boundary line
+  const ba = ramp(lt, 6.0, 6.8);
+  if (ba > 0) {
+    ctx.save(); ctx.globalAlpha *= ba; ctx.setLineDash([8, 8]); poly([[470, 150], [470, 840]], 'rgba(255,181,71,0.85)', 2); ctx.setLineDash([]);
+    text('THEIR NETWORK', 455, 860, 15, 'rgba(255,255,255,0.65)', MONO, 600, 'right', 1.5);
+    text('YOUR NETWORK', 485, 860, 15, C.amber, MONO, 700, 'left', 1.5);
+    ctx.restore();
+  }
+},
+// 2: edge router + firewall
+(lt, D) => {
+  const rx = 150, rw = 420, ry = 230, fy = 450, fh = 110;
+  const trunk = [[360, 120], [360, 860]];
+  poly(trunk, C.dim, 2);
+  // router
+  box(rx, ry, rw, 64, C.line, 'rgba(20,32,52,0.95)', 6, 2.5);
+  for (let i = 0; i < 8; i++) { box(rx + 150 + i * 30, ry + 22, 20, 18, C.dim, 'rgba(0,0,0,0.5)', 2, 1); dot(rx + 160 + i * 30, ry + 50, 2.5, hash(Math.floor(lt * 8) + i) > 0.4 ? '#4cff9a' : '#1d4a33', 6); }
+  text('EDGE ROUTER', rx + 20, ry + 32, 17, C.white, MONO, 700, 'left', 1.5);
+  // firewall wall
+  box(rx, fy, rw, fh, C.line, 'rgba(30,18,28,0.95)', 6, 2.5);
+  ctx.save(); rrect(rx, fy, rw, fh, 6); ctx.clip(); ctx.strokeStyle = 'rgba(255,90,110,0.28)'; ctx.lineWidth = 1.5; ctx.beginPath();
+  for (let r = 0; r < 5; r++) { const y = fy + r * 22; ctx.moveTo(rx, y); ctx.lineTo(rx + rw, y); for (let c = 0; c < 10; c++) { const x = rx + c * 46 + (r % 2) * 23; ctx.moveTo(x, y); ctx.lineTo(x, y + 22); } } ctx.stroke(); ctx.restore();
+  glow(C.red, 18 + 8 * Math.sin(lt * 5)); ctx.fillStyle = 'rgba(30,10,18,0.95)'; ctx.beginPath(); ctx.arc(360, fy + fh / 2, 38, 0, 7); ctx.fill(); noGlow();
+  icon('fw', 360, fy + fh / 2, 44, '#ff6a80', 2.5);
+  text('FIREWALL', rx + rw - 20, fy + fh + 22, 16, '#ff8597', MONO, 700, 'right', 1.5);
+  // packets
+  let inspected = 0, blocked = 0;
+  for (let k = 0; k < 60; k++) {
+    const ts = 0.3 + k * 0.17, age = lt - ts; if (age < 0) continue;
+    const bad = hash(k * 3.7) < 0.24, x = 360 + (hash(k) - 0.5) * 120, spd = 230;
+    let y = 120 + age * spd;
+    if (y > fy) inspected++;
+    if (bad) {
+      if (y >= fy - 6) { const hitAge = age - (fy - 6 - 120) / spd; blocked++; burst(x, fy - 6, hitAge, C.red); if (hitAge < 0.25) dot(x, fy - 6, 4.5, C.red); continue; }
+      dot(x, y, 4.5, C.red, 16);
+    } else {
+      if (y > 900) continue;
+      dot(x + (y > fy && y < fy + fh ? 0 : 0), y, 4, C.cyan, 14);
+    }
+  }
+  const ca = ramp(lt, 1.5, 2.1);
+  ctx.save(); ctx.globalAlpha *= ca;
+  box(40, 650, 240, 92, 'rgba(63,216,255,0.5)', 'rgba(8,14,26,0.85)', 6, 1.2);
+  text('INSPECTED', 58, 676, 14, 'rgba(255,255,255,0.6)', MONO, 600, 'left', 1.5);
+  text((12400 + inspected * 37).toLocaleString('en-US'), 58, 714, 34, C.cyan, MONO, 700, 'left');
+  box(440, 650, 240, 92, 'rgba(255,59,92,0.5)', 'rgba(8,14,26,0.85)', 6, 1.2);
+  text('THREATS BLOCKED', 458, 676, 14, 'rgba(255,255,255,0.6)', MONO, 600, 'left', 1.5);
+  text(String(310 + blocked * 3), 458, 714, 34, C.red, MONO, 700, 'left');
+  ctx.restore();
+},
+// 3: core switch
+(lt, D) => {
+  const sx = 80, sy = 220, sw = 560, sh = 130;
+  glow(C.blue, 24); box(sx, sy, sw, sh, 'rgba(110,170,255,0.9)', 'rgba(14,24,44,0.97)', 8, 2.5); noGlow();
+  text('CORE SWITCH', sx + 22, sy + 24, 16, C.white, MONO, 700, 'left', 1.5);
+  text('L3 · 48 × 10G', sx + sw - 22, sy + 24, 14, 'rgba(255,255,255,0.55)', MONO, 600, 'right', 1);
+  for (let r = 0; r < 2; r++) for (let c = 0; c < 16; c++) {
+    const px = sx + 26 + c * 32, py = sy + 50 + r * 36; box(px, py, 24, 22, C.dim, 'rgba(0,0,0,0.6)', 2, 1);
+    const on = hash(c * 2 + r + Math.floor(lt * 10 + c)) > 0.35; dot(px + 12, py - 5 + (r ? 32 : 0), 2, on ? '#4cff9a' : '#174030', on ? 6 : 0);
+  }
+  const nodes = [[120, 680, 'FLOOR 1', 'access'], [280, 720, 'FLOOR 2', 'access'], [440, 720, 'FLOOR 3', 'access'], [600, 680, 'SERVERS', 'server']];
+  nodes.forEach((n, i) => {
+    const a = ramp(lt, 0.4 + i * 0.25, 1.2 + i * 0.25);
+    const p0 = [sx + 70 + i * 140, sy + sh]; const pts = [];
+    for (let k = 0; k <= 20; k++) { const u = k / 20, y = lerp(p0[1], n[1] - 40, u), x = lerp(p0[0], n[0], ease(u)); pts.push([x, y]); }
+    ctx.save(); glow(C.blue, 8); partial(pts, a, 'rgba(70,150,255,0.7)', 3); noGlow(); ctx.restore();
+    if (a >= 1) { packets(pts, lt + i * 0.3, 3, 260, C.cyan, 4); packets(pts.slice().reverse(), lt + i, 2, 200, '#9ad1ff', 3); }
+    ctx.save(); ctx.globalAlpha *= a; box(n[0] - 50, n[1] - 40, 100, 80, C.line, 'rgba(18,28,46,0.92)', 8, 2);
+    icon(n[3], n[0], n[1] - 8, 30, C.cyan); text(n[2], n[0], n[1] + 24, 13, C.white, MONO, 600, 'center', 1); ctx.restore();
+  });
+  const ra = ramp(lt, 4.6, 5.2);
+  ctx.save(); ctx.globalAlpha *= ra; box(190, 410, 340, 110, 'rgba(63,216,255,0.4)', 'rgba(6,12,22,0.92)', 12, 1.2); glow(C.cyan, 24);
+  text(Math.min(10, (lt - 4.6) * 6).toFixed(1).replace('.0', '') === '10' ? '10' : Math.min(10, (lt - 4.6) * 6).toFixed(1), 380, 470, 96, C.cyan, SANS, 800, 'right');
+  noGlow(); text('Gb/s', 392, 488, 34, C.white, SANS, 500, 'left'); text('PER LINK', 392, 448, 14, 'rgba(255,255,255,0.6)', MONO, 600, 'left', 2);
+  ctx.restore();
+},
+// 4: access layer + PoE
+(lt, D) => {
+  const bx = 70, by = 170, bw = 580, bh = 660, floors = 3, fh = bh / floors;
+  box(bx, by, bw, bh, C.line, 'rgba(14,22,38,0.7)', 4, 2.5);
+  for (let f = 1; f < floors; f++) poly([[bx, by + f * fh], [bx + bw, by + f * fh]], C.line, 2);
+  const riser = [[bx + 50, by + bh + 30], [bx + 50, by + 40]];
+  ctx.save(); glow(C.blue, 10); partial(riser, ramp(lt, 0, 1.2), 'rgba(70,150,255,0.85)', 4); noGlow(); ctx.restore();
+  if (lt > 1.2) packets(riser, lt, 5, 240, C.cyan, 4);
+  text('RISER', bx + 50, by + bh + 50, 13, 'rgba(255,255,255,0.6)', MONO, 600, 'center', 1.5);
+  const dev = ['phone', 'camera', 'ap'], labels = ['VoIP', 'CCTV', 'AP'];
+  for (let f = 0; f < floors; f++) {
+    const fyc = by + bh - (f + 0.5) * fh, t0 = 1.0 + f * 0.6, a = ramp(lt, t0, t0 + 0.6);
+    text(`FLOOR ${f + 1}`, bx + bw - 14, by + bh - (f + 1) * fh + 20, 13, 'rgba(255,255,255,0.45)', MONO, 600, 'right', 1.5);
+    ctx.save(); ctx.globalAlpha *= a;
+    poly([[bx + 50, fyc], [bx + 110, fyc]], 'rgba(70,150,255,0.85)', 3);
+    box(bx + 110, fyc - 20, 92, 40, 'rgba(110,170,255,0.9)', 'rgba(14,24,44,0.97)', 5, 2);
+    for (let p = 0; p < 6; p++) dot(bx + 124 + p * 13, fyc + 8, 2, hash(p + f * 9 + Math.floor(lt * 7)) > 0.3 ? '#4cff9a' : '#174030', 4);
+    text('ACCESS', bx + 156, fyc - 6, 11, C.white, MONO, 700, 'center', 1);
+    dev.forEach((d, i) => {
+      const dx = bx + 280 + i * 105, line = [[bx + 202, fyc], [dx - 26, fyc]];
+      const la = ramp(lt, t0 + 0.4 + i * 0.15, t0 + 0.9 + i * 0.15);
+      partial(line, la, 'rgba(70,150,255,0.6)', 2);
+      if (la >= 1) { packets(line, lt + i, 2, 150, C.cyan, 3); packets(line, lt + i + 0.5, 1, 110, C.amber, 3.5); }
+      const pwr = ramp(lt, 4.2 + f * 0.25 + i * 0.12, 4.6 + f * 0.25 + i * 0.12);
+      box(dx - 26, fyc - 26, 52, 52, pwr > 0.5 ? 'rgba(255,181,71,0.9)' : C.line, 'rgba(18,28,46,0.95)', 8, 2);
+      if (pwr > 0) { ctx.save(); glow(C.amber, 18 * pwr); icon(d, dx, fyc - 3, 26, pwr > 0.5 ? '#ffd08a' : C.cyan); ctx.restore(); } else icon(d, dx, fyc - 3, 26, C.cyan);
+      text(labels[i], dx, fyc + 40, 12, 'rgba(255,255,255,0.65)', MONO, 600, 'center', 1);
+      if (pwr > 0) { ctx.save(); ctx.globalAlpha *= pwr; icon('bolt', dx + 24, fyc - 24, 14, C.amber); ctx.restore(); }
+    });
+    ctx.restore();
+  }
+  callout('PoE+ · DATA + 30 W POWER', bx + 385, by + bh - 0.5 * fh + 26, 520, 880, 4.0, lt, C.amber);
+},
+// 5: Wi-Fi
+(lt, D) => {
+  poly([[60, 200], [660, 200]], C.line, 2);
+  ctx.fillStyle = 'rgba(40,60,90,0.18)'; ctx.fillRect(60, 150, 600, 50);
+  const ax = 360, ay = 230;
+  glow(C.cyan, 20); ctx.fillStyle = 'rgba(20,34,56,1)'; ctx.beginPath(); ctx.ellipse(ax, ay, 70, 20, 0, 0, 7); ctx.fill(); noGlow();
+  ctx.strokeStyle = 'rgba(200,230,255,0.9)'; ctx.lineWidth = 2; ctx.stroke(); dot(ax, ay + 4, 4, C.cyan, 12);
+  callout('ACCESS POINT · Wi-Fi 6E', ax + 70, ay, 470, 300, 0.4, lt);
+  const lx = 360, ly = 790;
+  for (let k = 0; k < 7; k++) {
+    const ph = (((lt * 0.55) + k / 7) % 1 + 1) % 1, r = 40 + ph * 560;
+    ctx.save(); ctx.globalAlpha *= (1 - ph) * ramp(lt, 0.3, 1);
+    ctx.beginPath(); ctx.arc(ax, ay, r, Math.PI * 0.12, Math.PI * 0.88); ctx.strokeStyle = C.cyan; ctx.lineWidth = 3; glow(C.cyan, 14); ctx.stroke(); noGlow(); ctx.restore();
+  }
+  const s = laptop(lx, ly, 300, C.line);
+  const j = ramp(lt, 3.2, 4.4);
+  for (let b = 0; b < 4; b++) { const on = j > b / 4 + 0.05; box(s.x + s.w / 2 - 50 + b * 26, s.y + s.h / 2 + 20 - b * 16, 18, 20 + b * 16, 'rgba(0,0,0,0)', on ? C.cyan : 'rgba(255,255,255,0.12)', 3, 0); }
+  const k2 = ramp(lt, 4.6, 5.2);
+  if (k2 > 0) { ctx.save(); ctx.globalAlpha *= k2; glow('#4cff9a', 16); icon('lock', s.x + s.w / 2 + 70, s.y + s.h / 2 - 10, 34, '#4cff9a', 2.5); noGlow(); ctx.restore(); }
+  callout('WPA3-ENTERPRISE', lx + 150, ly - 120, 520, 600, 4.8, lt, '#4cff9a');
+  callout('5 / 6 GHz', lx - 150, ly - 120, 190, 560, 1.6, lt);
+},
+// 6: overview
+(lt, D) => {
+  const N = [['isp', 'ISP'], ['fw', 'FIREWALL'], ['core', 'CORE SWITCH'], ['access', 'ACCESS + PoE'], ['wifi', 'Wi-Fi'], ['device', 'LAPTOP']];
+  const pts = N.map((n, i) => [i % 2 ? 470 : 250, 190 + i * 124]);
+  const route = [];
+  for (let i = 0; i < pts.length - 1; i++) { route.push(pts[i]); route.push([pts[i][0], (pts[i][1] + pts[i + 1][1]) / 2]); route.push([pts[i + 1][0], (pts[i][1] + pts[i + 1][1]) / 2]); }
+  route.push(pts[pts.length - 1]);
+  poly(route, C.dim, 2);
+  const u = ramp(lt, 0.3, 4.5);
+  ctx.save(); glow(C.cyan, 14); partial(route, u, 'rgba(63,216,255,0.9)', 4); noGlow(); ctx.restore();
+  if (u > 0 && u < 1) { const p = pathAt(route, u); dot(p[0], p[1], 7, '#e8fbff', 24); }
+  if (u >= 1) packets(route, lt, 6, 300, C.cyan, 4);
+  N.forEach((n, i) => {
+    const reached = u >= i / (N.length - 1) - 0.001, [x, y] = pts[i];
+    ctx.save(); if (reached) glow(C.cyan, 22);
+    ctx.beginPath(); ctx.arc(x, y, 38, 0, 7); ctx.fillStyle = reached ? 'rgba(10,40,64,1)' : 'rgba(16,24,40,1)'; ctx.fill();
+    ctx.strokeStyle = reached ? C.cyan : C.line; ctx.lineWidth = 2.5; ctx.stroke(); noGlow(); ctx.restore();
+    icon(n[0], x, y, 36, reached ? '#d9f6ff' : C.line);
+    const left = i % 2 === 0; text(n[1], left ? x - 56 : x + 56, y, 17, reached ? C.white : 'rgba(255,255,255,0.4)', MONO, 700, left ? 'right' : 'left', 1.5);
+  });
+},
+];
+const TITLES = ['THE QUESTION', '01 · ISP FIBRE & DEMARC', '02 · ROUTER + FIREWALL', '03 · CORE SWITCH', '04 · ACCESS LAYER + PoE', '05 · WI-FI', 'FROM ISP TO LAPTOP'];
+
+// ---------- overlays ----------
+function header(t, si) {
+  const a = ramp(t, 0.1, 0.8);
+  ctx.save(); ctx.globalAlpha *= a;
+  text('NETWORK 101', 36, 64, 15, C.cyan, MONO, 700, 'left', 3);
+  text('ISP → LAPTOP', 36, 98, 30, C.white, SANS, 800, 'left');
+  // logo badge
+  box(W - 196, 36, 160, 100, 'rgba(255,255,255,0.9)', '#ffffff', 14, 1);
+  if (logo.complete) { const lw = 136, lh = lw * logo.height / logo.width; ctx.drawImage(logo, W - 184, 36 + (100 - lh) / 2, lw, lh); }
+  ctx.restore();
+  // scene title
+  const sc = TL.scenes[si], ta = ramp(t, sc.start - 0.2, sc.start + 0.4);
+  ctx.save(); ctx.globalAlpha *= ta; text(TITLES[si], 36, 146, 14, 'rgba(255,255,255,0.55)', MONO, 600, 'left', 2.5);
+  ctx.fillStyle = C.cyan; ctx.fillRect(36, 162, 40 * ta, 2); ctx.restore();
+}
+let GROUPS = null;
+function buildGroups() {
+  GROUPS = []; let cur = [];
+  TL.words.forEach((w, i) => {
+    cur.push(w); const nxt = TL.words[i + 1];
+    const end = !nxt || nxt.scene !== w.scene || /[.,?!]$/.test(w.w) || cur.length >= 4;
+    if (end) { GROUPS.push(cur); cur = []; }
+  });
+}
+function captions(t) {
+  let g = null;
+  for (const G of GROUPS) { if (t >= G[0].s - 0.05) g = G; }
+  if (!g) return;
+  const last = g[g.length - 1]; if (t > last.e + 0.9) return;
+  const a = ramp(t, g[0].s - 0.05, g[0].s + 0.12) * (1 - ramp(t, last.e + 0.5, last.e + 0.9));
+  ctx.save(); ctx.globalAlpha *= a;
+  ctx.font = `500 40px "${SANS}"`; const sp = ctx.measureText(' ').width;
+  const ws = g.map(w => ctx.measureText(w.w).width), total = ws.reduce((x, y) => x + y, 0) + sp * (g.length - 1);
+  const cy = 975, pw = total + 56;
+  box(360 - pw / 2, cy - 36, pw, 72, 'rgba(255,255,255,0.18)', 'rgba(10,16,28,0.72)', 36, 1.2);
+  let x = 360 - total / 2;
+  g.forEach((w, i) => {
+    const said = t >= w.s, now = t >= w.s && t <= w.e + 0.08;
+    if (now) glow(C.cyan, 16);
+    text(w.w, x, cy + 1, 40, now ? '#bff1ff' : said ? C.white : 'rgba(255,255,255,0.38)', SANS, 500, 'left');
+    noGlow(); x += ws[i] + sp;
+  });
+  ctx.restore();
+}
+function diagram(t, si) {
+  const N = [['isp', 'ISP'], ['fw', 'FIREWALL'], ['core', 'CORE'], ['access', 'ACCESS'], ['wifi', 'WI-FI'], ['device', 'DEVICE']];
+  const x0 = 62, x1 = 658, y = 1118, step = (x1 - x0) / (N.length - 1);
+  // progress target per scene
+  const target = [-0.4, 0, 1, 2, 3, 5, 5];
+  const sc = TL.scenes[si], prev = si > 0 ? target[si - 1] : -0.4;
+  let p = lerp(prev, target[si], ramp(t, sc.start - 0.2, sc.start + 1.2));
+  if (si === 6) p = lerp(-0.4, 5, ramp(t, sc.start + 0.3, sc.start + 4.5));
+  const a = ramp(t, 0.2, 1.0); ctx.save(); ctx.globalAlpha *= a;
+  ctx.fillStyle = 'rgba(4,7,13,0.75)'; ctx.fillRect(0, 1060, W, 220);
+  poly([[0, 1060], [W, 1060]], 'rgba(150,180,225,0.15)', 1);
+  poly([[x0, y], [x1, y]], 'rgba(150,180,225,0.3)', 2);
+  if (p > 0) { glow(C.cyan, 14); poly([[x0, y], [x0 + step * Math.min(p, 5), y]], C.cyan, 3); noGlow(); const hx = x0 + step * Math.min(p, 5); dot(hx, y, 4, '#e8fbff', 16); }
+  N.forEach((n, i) => {
+    const x = x0 + step * i, on = p >= i - 0.02, active = on && p < i + 0.98 && si !== 6 && si !== 0;
+    const pulse = active ? 0.5 + 0.5 * Math.sin(t * 6) : 0;
+    ctx.save(); if (on) glow(C.cyan, 12 + pulse * 16);
+    ctx.beginPath(); ctx.arc(x, y, 25 + pulse * 2, 0, 7); ctx.fillStyle = on ? 'rgba(10,44,70,1)' : 'rgba(14,20,34,1)'; ctx.fill();
+    ctx.strokeStyle = on ? C.cyan : 'rgba(150,180,225,0.4)'; ctx.lineWidth = 2; ctx.stroke(); noGlow(); ctx.restore();
+    icon(n[0], x, y, 26, on ? '#e0f7ff' : 'rgba(150,180,225,0.6)');
+    text(n[1], x, y + 46, 13, on ? C.white : 'rgba(255,255,255,0.4)', MONO, 600, 'center', 1.2);
+  });
+  text('globalscope.qa', 360, 1228, 15, 'rgba(255,255,255,0.45)', MONO, 500, 'center', 2);
+  ctx.restore();
+}
+function endCard(t) {
+  const sc = TL.scenes[6], t0 = sc.start + sc.dur + 0.1, a = ramp(t, t0, t0 + 0.7);
+  if (a <= 0) return;
+  ctx.save(); ctx.globalAlpha = a; ctx.fillStyle = 'rgba(3,6,12,0.88)'; ctx.fillRect(0, 0, W, H);
+  const s = 0.94 + 0.06 * a;
+  ctx.translate(360, 560); ctx.scale(s, s);
+  glow('rgba(63,216,255,0.6)', 40); box(-250, -170, 500, 330, 'rgba(255,255,255,1)', '#ffffff', 28, 1); noGlow();
+  if (logo.complete) { const lw = 420, lh = lw * logo.height / logo.width; ctx.drawImage(logo, -lw / 2, -150, lw, lh); }
+  ctx.restore();
+  ctx.save(); ctx.globalAlpha = ramp(t, t0 + 0.4, t0 + 1.1);
+  text('Network · Security · Cloud · Managed IT', 360, 800, 24, C.white, SANS, 500);
+  text('Doha, Qatar  ·  since 2009', 360, 842, 18, 'rgba(255,255,255,0.55)', MONO, 500, 'center', 1.5);
+  glow(C.cyan, 14); text('globalscope.qa', 360, 920, 34, C.cyan, SANS, 700); noGlow();
+  ctx.restore();
+}
+
+// ---------- frame ----------
+function sceneIndex(t) { let si = 0; TL.scenes.forEach((s, i) => { if (t >= s.start - 0.3) si = i; }); return si; }
+function renderAt(t) {
+  ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.globalAlpha = 1; noGlow();
+  background(t);
+  const si = sceneIndex(t);
+  for (let i = 0; i < SCENES.length; i++) {
+    const s = TL.scenes[i], nx = TL.scenes[i + 1];
+    const inA = ramp(t, s.start - 0.3, s.start + 0.25), outA = nx ? 1 - ramp(t, nx.start - 0.3, nx.start + 0.1) : 1;
+    const al = Math.min(inA, outA); if (al <= 0.001) continue;
+    const lt = t - s.start, z = 1.0 + 0.05 * clamp(lt / (s.dur + 0.5)) + (1 - inA) * 0.04;
+    ctx.save(); ctx.globalAlpha = al; ctx.translate(360, 520); ctx.scale(z, z); ctx.translate(-360, -520);
+    SCENES[i](lt, s.dur); ctx.restore(); noGlow();
+  }
+  header(t, si); captions(t); diagram(t, si); endCard(t);
+  // vignette
+  const v = ctx.createRadialGradient(360, 640, 380, 360, 640, 900); v.addColorStop(0, 'rgba(0,0,0,0)'); v.addColorStop(1, 'rgba(0,0,0,0.55)');
+  ctx.fillStyle = v; ctx.fillRect(0, 0, W, H);
+}
+window.setup = async (tl) => {
+  TL = tl; buildGroups();
+  await Promise.all([document.fonts.load(`500 40px "${SANS}"`), document.fonts.load(`800 40px "${SANS}"`), document.fonts.load(`700 16px "${MONO}"`), document.fonts.load(`600 16px "${MONO}"`), document.fonts.load(`300 40px "${SANS}"`)]);
+  if (!logo.complete) await new Promise(r => logo.onload = r);
+};
+window.frame = (t) => { renderAt(t); return cv.toDataURL('image/jpeg', 0.93); };
+</script></body></html>

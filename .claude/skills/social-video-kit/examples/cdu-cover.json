@@ -1,0 +1,10 @@
+{
+  "bg": "bg_17.png",
+  "sy": 220,
+  "tag": "AI COOLING 101",
+  "tagColor": "#ffb547",
+  "lines": ["HOW DOES A CDU", "COOL AN AI", "DATA CENTRE?"],
+  "sub": "Liquid cooling for high-density GPU racks",
+  "steps": ["GPU", "COLD PLATE", "TCS", "CDU", "FWS", "HEAT REJECTION"],
+  "highlight": "CDU"
+}

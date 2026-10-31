@@ -1,0 +1,10 @@
+{
+  "bg": "cdu_12.png",
+  "zoom": 1.42, "sx": 70, "sy": 10, "y": 1060,
+  "tag": "AI COOLING 101", "tagBg": "#3fd8ff", "tagFg": "#04121c",
+  "lines": [
+    { "s": "HOW AI CHIPS", "size": 170, "col": "#ffffff" },
+    { "s": "STAY COOL", "size": 230, "col": "#5fe3ff", "glow": "rgba(63,216,255,0.95)" }
+  ],
+  "sub": "The CDU, explained", "subBg": "rgba(255,181,71,0.97)", "subFg": "#1a0f00"
+}

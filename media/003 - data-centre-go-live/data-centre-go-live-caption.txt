@@ -1,0 +1,44 @@
+INSTAGRAM / TIKTOK / FACEBOOK
+-----------------------------
+How does a data centre actually go LIVE? ⚡
+
+Finishing construction doesn't make a data centre operational. Before critical IT goes live, every system has to prove itself, alone and together:
+1️⃣ Design and BIM/VDC coordination
+2️⃣ Construction
+3️⃣ Commissioning: factory tests, installation checks, functional tests 🧪
+4️⃣ Electrical proven: switchgear, UPS, generators, distribution ⚡
+5️⃣ Cooling proven: chillers, pumps, CRAHs/CDUs, controls ❄️
+6️⃣ Integrated systems testing: pull the utility power and watch what happens 🚨
+7️⃣ Operational readiness, then GO-LIVE ✅
+
+Does the UPS hold? Do the generators start? Does cooling stay up? Do the BMS and EPMS raise the right alarms?
+
+Built is not the same as live. The facility has to perform when it matters.
+
+🏢 Preparing a data centre or server room for go-live? DM us or visit globalscope.qa
+
+#DataCentre #Commissioning #IntegratedSystemsTesting #DataCentreDesign #MEP #BIM #MissionCritical #CriticalInfrastructure #UPS #Qatar #Doha #GlobalScope
+
+LINKEDIN
+--------
+How does a data centre actually go live?
+
+A data centre isn't operational just because construction is complete. Before critical IT workloads go live, the facility has to prove that its electrical, mechanical, cooling, controls and monitoring systems work, individually and together.
+
+DESIGN → BIM/VDC → CONSTRUCTION → COMMISSIONING → INTEGRATED TESTING → OPERATIONAL READINESS → GO-LIVE
+
+→ Electrical: substations, transformers, switchgear, UPS, generators and critical distribution perform to design intent
+→ Cooling: chillers, pumps, CRAHs/CDUs and heat rejection hold the environment under real load
+→ Commissioning: factory acceptance, installation verification, pre-functional and functional testing
+→ Integrated systems testing: if utility power fails, does the UPS hold, do generators start, does switching follow the sequence, does cooling stay available, do BMS and EPMS report correctly?
+→ Operational readiness: as-built data, asset records, commissioning records, monitoring baselines and procedures
+
+Good engineering comes down to one question: can the facility perform when it matters?
+
+At Global Scope we've been helping organisations across Qatar plan, integrate and manage critical IT infrastructure since 2009. Planning a data centre project? Let's talk: globalscope.qa
+
+#DataCentre #Commissioning #MissionCritical #MEPEngineering #Qatar
+
+YOUTUBE SHORTS TITLE
+--------------------
+How Does a Data Centre Go Live? (Commissioning in 60s) #shorts
