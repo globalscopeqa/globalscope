@@ -22,6 +22,12 @@ House rules for every video request from this user. Follow them without asking a
 
 The user keeps new videos in `C:\Users\Dell\OneDrive\Documents\Projects\Media\Inbox` on their Windows PC. Claude can't reach that PC, so `sync-media.ps1` (repo root, run by the user) pushes those videos to `inbox/` on branch `ccr-bae6bdbf-qv17eb`. It also pulls everything in `media/`, including the tracker, back into their `Media` folder.
 
+**Local mode (Claude Code running on the user's Windows PC, in a clone of this repo).** Check with `Test-Path "C:\Users\Dell\OneDrive\Documents\Projects\Media\Inbox"`. If it is there, skip the sync script:
+- Take videos straight from `Media\Inbox` (oldest first, one at a time), and move each original to `Media\Inbox\Uploaded` once its video is finished.
+- Write the deliverables to `media/<slug>/` in the repo (commit and push: all files are stored on GitHub) **and** copy that folder to `Media\<slug>\`. Copy `media/video-tracker.xlsx` to `Media\` after each rebuild.
+- Use `python` instead of `python3`. The tools come from `setup-windows.ps1` (run once): Git, Python, Node.js, FFmpeg, Pillow, openpyxl, Playwright + Chromium, and the Inter / JetBrains Mono fonts. If a tool is missing, ask the user to run that script.
+- Paths with spaces need quoting in PowerShell.
+
 When the user says "process the inbox" (or similar), or uploads videos in chat:
 1. `git fetch origin ccr-bae6bdbf-qv17eb` and work on that branch, so new inbox files are present.
 2. List `inbox/*.mp4|mov|m4v`, oldest first. Process **one video at a time, fully**, before starting the next: steps 1–6 below, then deliver its files.
