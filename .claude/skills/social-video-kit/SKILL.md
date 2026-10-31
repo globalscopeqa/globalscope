@@ -28,6 +28,12 @@ The user keeps new videos in `C:\Users\Dell\OneDrive\Documents\Projects\Media\In
 - Use `python` instead of `python3`. The tools come from `setup-windows.ps1` (run once): Git, Python, Node.js, FFmpeg, Pillow, openpyxl, Playwright + Chromium, and the Inter / JetBrains Mono fonts. If a tool is missing, ask the user to run that script.
 - Paths with spaces need quoting in PowerShell.
 
+**Excel batch mode (the user's main workflow).** The user keeps a posts list `builddatacentres_posts.xlsx` and a folder `video_files` with the videos, both in `C:\Users\Dell\OneDrive\Documents\Projects\Media` (or next to each other wherever the user points). The **last column** of each row holds that post's video file name in `video_files`. The other columns hold the post details (title, description, hashtags…); read the header row to see which is which.
+- Process **every row, one video at a time**, in sheet order. Skip rows whose last cell is empty, and report any file name that isn't found in `video_files`.
+- For each video, make **its own folder**, named after the video file without its extension, next to `video_files` (e.g. `Media\<video name>\`). Put all of that video's deliverables in it: the final video (logo + 1 s cover intro), the 1:1 cover, the 9:16 thumbnail and the caption. Write the caption from that row's own title and description, keeping the user's wording, CTA question and hashtags, and adding the Global Scope CTA.
+- Don't edit `builddatacentres_posts.xlsx` itself. Progress goes into the tracker (`video-tracker.xlsx`, rebuilt after each video). Also copy each folder to `media/<slug>/` in the repo, then commit and push.
+- If a folder for a video already exists with all four deliverables, skip that video (so a re-run continues where it stopped).
+
 When the user says "process the inbox" (or similar), or uploads videos in chat:
 1. `git fetch origin ccr-bae6bdbf-qv17eb` and work on that branch, so new inbox files are present.
 2. List `inbox/*.mp4|mov|m4v`, oldest first. Process **one video at a time, fully**, before starting the next: steps 1–6 below, then deliver its files.
